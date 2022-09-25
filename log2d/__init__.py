@@ -13,6 +13,7 @@ class Log():
     date_formats = {
         0: "%Y-%m-%d %H:%M:%S",
         1: "%H:%M:%S",
+        2: "%d/%m/%Y %I:%M:%S %p",
     }
     presets = {
         0: "%(name)s|%(levelname)-7s|%(asctime)s|%(message)s",
@@ -33,16 +34,15 @@ class Log():
 
     def __init__(self, name, **kwargs):
         self.name = name
+        self.mode = self.mode.lower()
         for keyword in "path level fmt datefmt to_file to_stdout path mode backup_count".split():
             setattr(self, keyword, kwargs.get(keyword) or getattr(Log, keyword))
-        self.mode = self.mode.lower()
         logger = logging.getLogger(name)
         level_int = getattr(logging, self.level.upper())
         logger.setLevel(level=level_int)
         if kwargs.get("path") and self.to_file is None:
             self.to_file = True
         if self.to_file:
-            logFileFormatter = logging.Formatter(fmt=self.fmt, datefmt=self.datefmt)
             self.path = Path(self.path)
             filepath = self.path / f"{name}.log"
             if self.mode == "w":
@@ -51,6 +51,7 @@ class Log():
                     fileHandler.doRollover()
             else:
                 fileHandler = logging.FileHandler(filename=filepath, mode=self.mode)
+            logFileFormatter = logging.Formatter(fmt=self.fmt, datefmt=self.datefmt)
             fileHandler.setFormatter(logFileFormatter)
             fileHandler.setLevel(level=level_int)
             logger.addHandler(fileHandler)
@@ -61,7 +62,7 @@ class Log():
             consoleHandler.setLevel(level=level_int)
             logger.addHandler(consoleHandler)
         setattr(Log, name, logger)
-        self.logger = logger
+        # self.logger = logger
         Log.index[name] = self
 
 

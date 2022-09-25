@@ -68,7 +68,9 @@ class Log():
     def __call__(self, text):
         """
         Shortcut to log at effective logging level using easy syntax e.g.
-        Log.mylogger("Some text")
+
+        mylog = Log("mylog")
+        mylog("This text gets added to the logger output - no fuss!")
         """
         level = logging.getLevelName(self.logger.getEffectiveLevel()).lower()
         getattr(self.logger, level)(text)

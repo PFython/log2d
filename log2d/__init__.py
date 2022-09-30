@@ -27,7 +27,7 @@ class Log():
     level = "debug"
     fmt = presets["name_and_time"]
     datefmt = date_formats['iso8601']
-    to_file = None
+    to_file = False
     to_stdout = True
     path = Path.cwd()
     mode = "a"
@@ -36,7 +36,7 @@ class Log():
     def __init__(self, name, **kwargs):
         self.name = name
         self.mode = self.mode.lower()
-        for keyword in "path level fmt datefmt to_file to_stdout path mode backup_count".split():
+        for keyword in "path level fmt datefmt to_file to_stdout mode backup_count".split():
             setattr(self, keyword, kwargs.get(keyword) or getattr(Log, keyword))
         logger = logging.getLogger(name)
         level_int = getattr(logging, self.level.upper())
@@ -62,6 +62,7 @@ class Log():
             consoleHandler.setFormatter(logStreamFormatter)
             consoleHandler.setLevel(level=level_int)
             logger.addHandler(consoleHandler)
+        self.logger = logger
         setattr(Log, name, logger)
         Log.index[name] = self
 
@@ -87,7 +88,7 @@ class Log():
         logStreamFormatter = logging.Formatter(fmt=fmt, datefmt=datefmt)
         consoleHandler = logging.StreamHandler(stream=sys.stdout)
         consoleHandler.setFormatter(logStreamFormatter)
-        # consoleHandler.setLevel(level=30)
+        consoleHandler.setLevel(level=30)
         logger.addHandler(consoleHandler)
         logger.warning(text or "This is a preview log entry.")
         logger.removeHandler(consoleHandler)

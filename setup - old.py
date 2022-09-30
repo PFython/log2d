@@ -7,14 +7,14 @@ from setuptools import setup
 
 NAME = "log2d"
 GITHUB_USERNAME = "PFython"
-VERSION = "0.0.3"
+VERSION = "0.0.2"
 DESCRIPTION = "Simple, powerful wrapper for logging"
 LICENSE = "MIT License"
 AUTHOR = "Peter Fison"
 EMAIL = "peter@awsom.solutions"
 URL = "https://github.com/PFython/log2d"
 KEYWORDS = "Logging, Logger, Output, Log,"
-CLASSIFIERS = "Development Status :: 4 - Beta, Intended Audience :: Developers, Operating System :: OS Independent, Programming Language :: Python :: 3.10, Programming Language :: Python :: 3.6, Programming Language :: Python :: 3.7, Programming Language :: Python :: 3.8, Programming Language :: Python :: 3.9, Topic :: Internet, Topic :: Internet :: Log Analysis, Topic :: Internet :: WWW/HTTP, Topic :: Internet :: WWW/HTTP :: Session, Topic :: Security, Topic :: Software Development, Topic :: Software Development :: Bug Tracking, Topic :: Software Development :: Debuggers, Topic :: Software Development :: Libraries :: Python Modules, Topic :: Software Development :: Testing, Topic :: System, Topic :: System :: Logging, Topic :: System :: Monitoring, Topic :: System :: Networking, Topic :: Utilities, License :: OSI Approved :: MIT License"
+CLASSIFIERS = "Development Status :: 3 - Alpha, Intended Audience :: Developers, Operating System :: OS Independent, Programming Language :: Python :: 3.10, Programming Language :: Python :: 3.6, Programming Language :: Python :: 3.7, Programming Language :: Python :: 3.8, Programming Language :: Python :: 3.9, Topic :: Internet, Topic :: Internet :: Log Analysis, Topic :: Internet :: WWW/HTTP, Topic :: Internet :: WWW/HTTP :: Session, Topic :: Security, Topic :: Software Development, Topic :: Software Development :: Bug Tracking, Topic :: Software Development :: Debuggers, Topic :: Software Development :: Libraries :: Python Modules, Topic :: Software Development :: Testing, Topic :: System, Topic :: System :: Logging, Topic :: System :: Monitoring, Topic :: System :: Networking, Topic :: Utilities, License :: OSI Approved :: MIT License"
 REQUIREMENTS = "cleverdict, "
 
 

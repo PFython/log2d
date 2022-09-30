@@ -11,21 +11,22 @@ class Log():
     """
     index = {}
     date_formats = {
-        0: "%Y-%m-%d %H:%M:%S",
-        1: "%H:%M:%S",
-        2: "%d/%m/%Y %I:%M:%S %p",
+        "date_and_time": "%Y-%m-%d %H:%M:%S",
+        "time": "%H:%M:%S",
+        "iso8601": "%Y-%m-%dT%H:%M:%S%z",
+        "am_pm": "%d/%m/%Y %I:%M:%S %p",
     }
     presets = {
-        0: "%(name)s|%(levelname)-7s|%(asctime)s|%(message)s",
-        1: "%(name)s|%(asctime)s|%(message)s",
-        2: "%(asctime)s|%(message)s",
-        3: "%(levelname)-8s %(asctime)s \t %(filename)s @function %(funcName)s line %(lineno)s - %(message)s",
-        4: "%(levelname)-8s %(asctime)s (%(relativeCreated)d) \t %(pathname)s F%(funcName)s L%(lineno)s - %(message)s",
+        "name_level_time": "%(name)s|%(levelname)-7s|%(asctime)s|%(message)s",
+        "name_and_time": "%(name)s|%(asctime)s|%(message)s",
+        "timestamp_only": "%(asctime)s|%(message)s",
+        "file_func_name": "%(levelname)-8s|%(asctime)s|line %(lineno)s of function: %(funcName)s in %(filename)s|%(message)s",
+        "relative_time": "%(levelname)-8s|%(relativeCreated)d|%(pathname)s|%(funcName)s|%(lineno)s|%(message)s",
     }
     path = ""
     level = "debug"
-    fmt = presets[0]
-    datefmt = date_formats[0]
+    fmt = presets["name_and_time"]
+    datefmt = date_formats['iso8601']
     to_file = None
     to_stdout = True
     path = Path.cwd()
@@ -62,11 +63,10 @@ class Log():
             consoleHandler.setLevel(level=level_int)
             logger.addHandler(consoleHandler)
         setattr(Log, name, logger)
-        # self.logger = logger
         Log.index[name] = self
 
 
-    def __call__(self, text):
+    def __call__(self, *args, **kwargs):
         """
         Shortcut to log at effective logging level using easy syntax e.g.
 
@@ -74,28 +74,28 @@ class Log():
         mylog("This text gets added to the logger output - no fuss!")
         """
         level = logging.getLevelName(self.logger.getEffectiveLevel()).lower()
-        getattr(self.logger, level)(text)
+        getattr(self.logger, level)(*args, **kwargs)
 
     @staticmethod
     def preview(fmt="", datefmt="", text=""):
         """Send a preview of the supplied format string to stdout"""
         logger = logging.getLogger("temp_preview")
         logger.setLevel(level=10)
-        datefmt = datefmt or Log.date_formats[0]
-        fmt = fmt or Log.presets[0]
+        datefmt = datefmt or Log.datefmt
+        fmt = fmt or Log.fmt
         fmt = fmt.replace("{TITLE}", "PREVIEW")
         logStreamFormatter = logging.Formatter(fmt=fmt, datefmt=datefmt)
         consoleHandler = logging.StreamHandler(stream=sys.stdout)
         consoleHandler.setFormatter(logStreamFormatter)
-        consoleHandler.setLevel(level=30)
+        # consoleHandler.setLevel(level=30)
         logger.addHandler(consoleHandler)
         logger.warning(text or "This is a preview log entry.")
         logger.removeHandler(consoleHandler)
 
     @staticmethod
-    def preview_presets():
-        for key1,fmt in Log.presets.items():
-            for key2,datefmt in Log.date_formats.items():
+    def preview_all():
+        for key1, fmt in Log.presets.items():
+            for key2, datefmt in Log.date_formats.items():
                 text = f"This is a preview using  and "
-                print(f"\nPreset {key1} / Date Format {key2}:")
+                print(f'\nfmt="{key1}", datefmt="{key2}"')
                 Log.preview(fmt, datefmt)

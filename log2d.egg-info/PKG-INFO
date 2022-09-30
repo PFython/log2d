@@ -1,9 +1,9 @@
 Metadata-Version: 2.1
 Name: log2d
-Version: 0.0.1
+Version: 0.0.2
 Summary: Simple, powerful wrapper for logging
 Home-page: https://github.com/PFython/log2d
-Download-URL: https://github.com/PFython/log2d/archive/0.0.1.tar.gz
+Download-URL: https://github.com/PFython/log2d/archive/0.0.2.tar.gz
 Author: Peter Fison
 Author-email: peter@awsom.solutions
 License: MIT License
@@ -52,7 +52,7 @@ In web-scraping apps for example, it's useful to collect the HTTP requests which
 
 `log2d` makes it simple to create, customise, and use a new logger for each of these types of output, for example sending `progress` messages just to the console, and creating separate `.log` files for `successes`, `failures`, `retries`, `exceptions`, and `timings`.
 
-It does so in a concise, readable, and (dare I claim?) "Pythonic" way, that doesn't require mastery of the `logging` module itself.
+It does so in a concise, readable, and (dare I claim?) "Pythonic" way, that doesn't require mastery of the `logging` module itself.  It allows you to create a sophisticated logger with powerful default features enabled in just one line of code, then send output to that logger whenever and from wherever you like - also in just one line.
 
 ## SETUP
 Simply import the `Log` class into your Python script:
@@ -72,6 +72,15 @@ Output: root|WARNING|2022-09-25 12:38:07|Danger, Will Robinson!
 ```
 
 > _In place of `.warning` you can use any of the standard log levels, either upper or lower case: DEBUG, INFO, WARNING, ERROR, and CRITICAL_
+>
+> _You **could** specify a logger name with spaces and other characters rather than underscores, but you wouldn't then be able to use Python's nice `.attribute` notation.  If your log name was "my main log" you'd need to use `getattr(Log, "my main log").warning("...")` instead._
+
+
+### Set a minimum level of message to capture (in plain English rather than using numeric values):
+
+```
+Log("my_title", level="WARNING")
+```
 
 ### Create your own shortcut to log a message at the default level:
 
@@ -79,9 +88,11 @@ Output: root|WARNING|2022-09-25 12:38:07|Danger, Will Robinson!
 log_failures = Log("failures")
 log_failures("Insert your failure message here")
 
-Output: FAILURES|DEBUG  |2022-09-25 12:37:33|Insert your failure message here
+Output: failures|DEBUG  |2022-09-25 12:37:33|Insert your failure message here
 ```
 > _The default log level used by `Log` is actually DEBUG.  This change to the `logging` default of WARNING is intended to make things safer and more predictable for unfamiliar users who might otherwise be sending DEBUG and INFO level messages and wondering why they're not being logged._
+>
+> _You can even use this feature to overwrite the `print` function and convert every old `print()` line into a logging command.  `_print = print; print = Log("print")`_
 
 ### Create a logger that just outputs to a file each time:
 
@@ -92,7 +103,17 @@ Log.success.critical("Alert! Alert!")
 
 (Creates and updates ./success.log)
 ```
-> _You **could** specify a logger name with spaces and other characters rather than underscores, but you wouldn't then be able to use Python's nice `.attribute` notation.  If your log name was "my main log" you'd need to use `getattr(Log, "my main log").warning("...")` instead._
+### Specify a folder/directory for a specific logger:
+```
+Log("my_title", path="./output")
+```
+> _NB `to_file` is automatically set to True if a `path` is supplied._
+>
+> _The default path is the current working directory `""` or `"."`_
+>
+> _If a non-existent folder/directory is specified, `FileNotFoundError` will be raised._
+
+
 
 ## OTHER KEYWORD OPTIONS AND UTILITY METHODS
 
@@ -101,40 +122,34 @@ Log.success.critical("Alert! Alert!")
 ```
 results = Log("session_results", to_file=True, mode="a", backup_count=10)
 ```
-> _The current log file will always be `session_results.log` but for subsequent sessions this will be copied to `session_results.log.1` then `session_results.log.2` etc until the backup count is reached, then start again on a rotating basis.
+> _The current log file will always be `session_results.log` but for subsequent sessions this will be copied to `session_results.log.1` then `session_results.log.2` etc until the backup count is reached, then start again on a rotating basis._
 >
 > _If `backup_count` is not specified, the default number of backups is 5._
-
-### Set a minimum level of message to capture (in plain English rather than using numeric values):
-
-```
-Log("my_title", level="WARNING")
-```
 
 
 ### Preview a particular message format and/or date format - either one of the supplied presets, or one of your own design:
 
 ```
-Log.preview(fmt=Log.presets[2], datefmt=Log.date_formats[1])
+Log.preview(fmt=Log.presets["timestamp_only"], datefmt=Log.date_formats["time"])
 
 Output: 13:10:06|This is a preview log entry.
 
 Log.preview(datefmt="%m-%d::%H:%M")
 
-Output: temp_preview|WARNING|09-25::15:36|This is a preview log entry.
+Output: temp_preview|09-25::15:36|This is a preview log entry.
 ```
 
 
 ### Preview all combinations of message/date presets:
 
 ```
-Log.preview_presets()
+Log.preview_all()
 ```
 
 ### Create a logger using a preset message/date format or one of your own design:
 
 ```
-Log("my_title", fmt=Log.presets[4], datefmt=Log.date_formats[1])
+Log("my_title", fmt=Log.presets["func_file_name"], datefmt=Log.date_formats["date_and_time"])
 ```
 ### Add a new date format or message format preset at the class level, such that future instances can use them:
 ```
@@ -146,17 +161,6 @@ Log.presets["my_message_format"] = "%(asctime)s (%(name)s): %(message)s"
 > _https://docs.python.org/3/library/logging.html#formatter-objects_
 >
 > _https://docs.python.org/3/library/logging.html#logging.LogRecord_
-
-### Specify a folder/directory for a specific logger:
-```
-Log("my_title", path="./output")
-```
-> _NB `to_file` is automatically set to True if a `path` is supplied._
->
-> _The default path is the current working directory `""` or `"."`_
->
-> _If a non-existent folder/directory is specified, `FileNotFoundError` will be raised._
-
 
 In general terms, the values of attributes such as `level`, `fmt`, `datefmt`, `to_file`, `to_stdout`, `path`, `mode`, and `backup_count` can be set for a specific logger by supplying them as keyword arguments on initialisation.  Where no argument is supplied for a new logger, the class level defaults will be used.  Default attributes can also be set at a class level in the normal way:
 

@@ -92,26 +92,26 @@ results = Log("session_results", to_file=True, mode="a", backup_count=10)
 ### Preview a particular message format and/or date format - either one of the supplied presets, or one of your own design:
 
 ```
-Log.preview(fmt=Log.presets[2], datefmt=Log.date_formats[1])
+Log.preview(fmt=Log.presets["timestamp_only"], datefmt=Log.date_formats["time"])
 
 Output: 13:10:06|This is a preview log entry.
 
 Log.preview(datefmt="%m-%d::%H:%M")
 
-Output: temp_preview|WARNING|09-25::15:36|This is a preview log entry.
+Output: temp_preview|09-25::15:36|This is a preview log entry.
 ```
 
 
 ### Preview all combinations of message/date presets:
 
 ```
-Log.preview_presets()
+Log.preview_all()
 ```
 
 ### Create a logger using a preset message/date format or one of your own design:
 
 ```
-Log("my_title", fmt=Log.presets[4], datefmt=Log.date_formats[1])
+Log("my_title", fmt=Log.presets["func_file_name"], datefmt=Log.date_formats["date_and_time"])
 ```
 ### Add a new date format or message format preset at the class level, such that future instances can use them:
 ```

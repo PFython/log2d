@@ -25,7 +25,7 @@ class Log():
     }
     path = ""
     level = "debug"
-    fmt = presets["name_and_time"]
+    fmt = presets["name_level_time"]
     datefmt = date_formats['iso8601']
     to_file = False
     to_stdout = True
@@ -37,7 +37,9 @@ class Log():
         self.name = name
         self.mode = self.mode.lower()
         for keyword in "path level fmt datefmt to_file to_stdout mode backup_count".split():
-            setattr(self, keyword, kwargs.get(keyword) or getattr(Log, keyword))
+            if kwargs.get(keyword) is None:
+                kwargs[keyword] = getattr(Log, keyword)
+            setattr(self, keyword,  kwargs.get(keyword))
         logger = logging.getLogger(name)
         level_int = getattr(logging, self.level.upper())
         logger.setLevel(level=level_int)

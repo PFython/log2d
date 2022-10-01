@@ -1,9 +1,9 @@
 Metadata-Version: 2.1
 Name: log2d
-Version: 0.0.3
+Version: 0.0.6
 Summary: Simple, powerful wrapper for logging
 Home-page: https://github.com/PFython/log2d
-Download-URL: https://github.com/PFython/log2d/archive/0.0.3.tar.gz
+Download-URL: https://github.com/PFython/log2d/archive/0.0.6.tar.gz
 Author: Peter Fison
 Author-email: peter@awsom.solutions
 License: MIT License
@@ -65,16 +65,17 @@ from log2d import Log
 ### Create a named logger that only outputs to the console ("stdout") using default message formatting and date format:
 
 ```
-Log("root")
-Log.root.warning("Danger, Will Robinson!")
+Log("main")
+Log.main.warning("Danger, Will Robinson!")
 
-Output: root|WARNING|2022-09-25 12:38:07|Danger, Will Robinson!
+Output: main|WARNING|2022-09-25 12:38:07|Danger, Will Robinson!
 ```
 
 > _In place of `.warning` you can use any of the standard log levels, either upper or lower case: DEBUG, INFO, WARNING, ERROR, and CRITICAL_
 >
 > _You **could** specify a logger name with spaces and other characters rather than underscores, but you wouldn't then be able to use Python's nice `.attribute` notation.  If your log name was "my main log" you'd need to use `getattr(Log, "my main log").warning("...")` instead._
-
+>
+> NB We **strongly** suggest you avoid naming your logger "root" as this has a special meaning in the Logging module itself - basically it inherits from other loggers which can cause unexpected results.
 
 ### Set a minimum level of message to capture (in plain English rather than using numeric values):
 

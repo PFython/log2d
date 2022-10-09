@@ -212,7 +212,7 @@ If neither of these approaches give you what you need, you can dive a bit deeper
 
 ## FEEDBACK AND CONTRIBUTING
 
-I'd be delighted to hear any suggestions, bug reports, or comments in the form of a Github ISSUE, and if you've found `log2d` useful or merely interesting please do click the "Star" button.  It really raises my spirites to see that kind of feedback.
+I'd be delighted to hear any suggestions, bug reports, or comments in the form of a Github ISSUE, and if you've found `log2d` useful or merely interesting please do click the "Star" button.  It really raises my spirits to see that kind of feedback.
 
 If you're in paid employment and `log2d` has saved you even 30 minutes' effort, please consider how much this gift equates to based on your daily/hourly rate, and whether it might feel good to spend a minute of your own time leaving a nice comment on BuyMeaCoffee.com?  Thank you.
 

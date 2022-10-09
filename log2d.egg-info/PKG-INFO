@@ -1,9 +1,9 @@
 Metadata-Version: 2.1
 Name: log2d
-Version: 0.0.7
+Version: 0.0.8
 Summary: Simple, sane, and sensible logging
 Home-page: https://github.com/PFython/log2d
-Download-URL: https://github.com/PFython/log2d/archive/0.0.7.tar.gz
+Download-URL: https://github.com/PFython/log2d/archive/0.0.8.tar.gz
 Author: Peter Fison
 Author-email: peter@awsom.solutions
 License: MIT License

@@ -40,34 +40,36 @@ class Log():
             if kwargs.get(keyword) is None:
                 kwargs[keyword] = getattr(Log, keyword)
             setattr(self, keyword,  kwargs.get(keyword))
+        self.path = Path(self.path)
         logger = logging.getLogger(name)
-        level_int = getattr(logging, self.level.upper())
-        logger.setLevel(level=level_int)
+        self.level_int = getattr(logging, self.level.upper())
+        logger.setLevel(level=self.level_int)
         if kwargs.get("path") and self.to_file is None:
             self.to_file = True
-        if self.to_file:
-            self.path = Path(self.path)
-            filepath = self.path / f"{name}.log"
-            if self.mode == "w":
-                fileHandler = logging.handlers.RotatingFileHandler(filepath, mode='w', backupCount=self.backup_count, delay=True)
-                if filepath.is_file():
-                    fileHandler.doRollover()
-            else:
-                fileHandler = logging.FileHandler(filename=filepath, mode=self.mode)
-            logFileFormatter = logging.Formatter(fmt=self.fmt, datefmt=self.datefmt)
-            fileHandler.setFormatter(logFileFormatter)
-            fileHandler.setLevel(level=level_int)
-            logger.addHandler(fileHandler)
-        if self.to_stdout:
-            logStreamFormatter = logging.Formatter(fmt=self.fmt, datefmt=self.datefmt)
-            consoleHandler = logging.StreamHandler(stream=sys.stdout)
-            consoleHandler.setFormatter(logStreamFormatter)
-            consoleHandler.setLevel(level=level_int)
-            logger.addHandler(consoleHandler)
+        logger.addHandler(self.get_handler())
         self.logger = logger
         setattr(Log, name, logger)
         Log.index[name] = self
 
+    def get_handler(self):
+        if self.to_file:
+            filepath = self.path / f"{self.name}.log"
+            if self.mode == "w":
+                handler = logging.handlers.Rotatinghandler(filepath, mode='w', backupCount=self.backup_count, delay=True)
+                if filepath.is_file():
+                    handler.doRollover()
+            else:
+                handler = logging.handler(filename=filepath, mode=self.mode)
+            logFileFormatter = logging.Formatter(fmt=self.fmt, datefmt=self.datefmt)
+            handler.setFormatter(logFileFormatter)
+            handler.setLevel(level=self.level_int)
+            return handler
+        if self.to_stdout:
+            logStreamFormatter = logging.Formatter(fmt=self.fmt, datefmt=self.datefmt)
+            handler = logging.StreamHandler(stream=sys.stdout)
+            handler.setFormatter(logStreamFormatter)
+            handler.setLevel(level=self.level_int)
+            return handler
 
     def __call__(self, *args, **kwargs):
         """
@@ -88,12 +90,12 @@ class Log():
         fmt = fmt or Log.fmt
         fmt = fmt.replace("{TITLE}", "PREVIEW")
         logStreamFormatter = logging.Formatter(fmt=fmt, datefmt=datefmt)
-        consoleHandler = logging.StreamHandler(stream=sys.stdout)
-        consoleHandler.setFormatter(logStreamFormatter)
-        consoleHandler.setLevel(level=30)
-        logger.addHandler(consoleHandler)
+        handler = logging.StreamHandler(stream=sys.stdout)
+        handler.setFormatter(logStreamFormatter)
+        handler.setLevel(level=30)
+        logger.addHandler(handler)
         logger.warning(text or "This is a preview log entry.")
-        logger.removeHandler(consoleHandler)
+        logger.removeHandler(handler)
 
     @staticmethod
     def preview_all():
@@ -102,3 +104,9 @@ class Log():
                 text = f"This is a preview using  and "
                 print(f'\nfmt="{key1}", datefmt="{key2}"')
                 Log.preview(fmt, datefmt)
+
+    @staticmethod
+    def disable_rootlogger():
+        root = logging.Logger.root
+        for handler in root.handlers:
+            root.removeHandler(handler)

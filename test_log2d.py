@@ -47,3 +47,12 @@ def test_multiples(capfd):
     http_log = Log("HTTP", to_file=True, to_stdout=False)
     timing_log = Log("Timing", to_file=True, to_stdout=False)
     retry_log = Log("Retry", to_file=True, to_stdout=False)
+
+def test_coexist_with_logging():
+    import logging
+    logging.warning("This creates a 'root' logger")
+    from log2d import Log
+    other = Log("other")
+    other("This will be echoed twice - 'root' and 'other'")
+    Log.disable_rootlogger()
+    other("This should only appear once now")

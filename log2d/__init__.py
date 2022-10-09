@@ -35,12 +35,12 @@ class Log():
 
     def __init__(self, name, **kwargs):
         self.name = name
-        self.mode = self.mode.lower()
         for keyword in "path level fmt datefmt to_file to_stdout mode backup_count".split():
             if kwargs.get(keyword) is None:
                 kwargs[keyword] = getattr(Log, keyword)
             setattr(self, keyword,  kwargs.get(keyword))
         self.path = Path(self.path)
+        self.mode = self.mode.lower()
         logger = logging.getLogger(name)
         self.level_int = getattr(logging, self.level.upper())
         logger.setLevel(level=self.level_int)

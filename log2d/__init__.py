@@ -55,11 +55,11 @@ class Log():
         if self.to_file:
             filepath = self.path / f"{self.name}.log"
             if self.mode == "w":
-                handler = logging.handlers.Rotatinghandler(filepath, mode='w', backupCount=self.backup_count, delay=True)
+                handler = logging.handlers.RotatingFileHandler(filepath, mode='w', backupCount=self.backup_count, delay=True)
                 if filepath.is_file():
                     handler.doRollover()
             else:
-                handler = logging.handler(filename=filepath, mode=self.mode)
+                handler = logging.FileHandler(filename=filepath, mode=self.mode)
             logFileFormatter = logging.Formatter(fmt=self.fmt, datefmt=self.datefmt)
             handler.setFormatter(logFileFormatter)
             handler.setLevel(level=self.level_int)

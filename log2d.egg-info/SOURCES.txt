@@ -7,5 +7,4 @@ log2d/test_log2d.py
 log2d.egg-info/PKG-INFO
 log2d.egg-info/SOURCES.txt
 log2d.egg-info/dependency_links.txt
-log2d.egg-info/requires.txt
 log2d.egg-info/top_level.txt

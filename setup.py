@@ -7,7 +7,7 @@ from setuptools import setup
 
 NAME = "log2d"
 GITHUB_USERNAME = "PFython"
-VERSION = "0.0.9"
+VERSION = "0.0.10"
 DESCRIPTION = "Simple, sane, and sensible logging"
 LICENSE = "MIT License"
 AUTHOR = "Peter Fison"

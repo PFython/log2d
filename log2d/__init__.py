@@ -36,22 +36,24 @@ class Log():
     def __init__(self, name, **kwargs):
         self.name = name
         for keyword in "path level fmt datefmt to_file to_stdout mode backup_count".split():
-            if kwargs.get(keyword) is None:
+            if keyword not in kwargs:
                 kwargs[keyword] = getattr(Log, keyword)
             setattr(self, keyword,  kwargs.get(keyword))
         self.path = Path(self.path)
         self.mode = self.mode.lower()
-        logger = logging.getLogger(name)
         self.level_int = getattr(logging, self.level.upper())
+        logger = logging.getLogger(self.name)
         logger.setLevel(level=self.level_int)
         if kwargs.get("path") and self.to_file is None:
             self.to_file = True
-        logger.addHandler(self.get_handler())
+        for handler in self.get_handlers():
+            logger.addHandler(handler)
         self.logger = logger
-        setattr(Log, name, logger)
-        Log.index[name] = self
+        setattr(Log, self.name, logger)
+        Log.index[self.name] = self
 
-    def get_handler(self):
+    def get_handlers(self):
+        handlers = []
         if self.to_file:
             filepath = self.path / f"{self.name}.log"
             if self.mode == "w":
@@ -63,13 +65,15 @@ class Log():
             logFileFormatter = logging.Formatter(fmt=self.fmt, datefmt=self.datefmt)
             handler.setFormatter(logFileFormatter)
             handler.setLevel(level=self.level_int)
-            return handler
+            handlers += [handler]
         if self.to_stdout:
+            print("creating stduout")
             logStreamFormatter = logging.Formatter(fmt=self.fmt, datefmt=self.datefmt)
             handler = logging.StreamHandler(stream=sys.stdout)
             handler.setFormatter(logStreamFormatter)
             handler.setLevel(level=self.level_int)
-            return handler
+            handlers += [handler]
+        return handlers
 
     def __call__(self, *args, **kwargs):
         """

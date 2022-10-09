@@ -67,7 +67,6 @@ class Log():
             handler.setLevel(level=self.level_int)
             handlers += [handler]
         if self.to_stdout:
-            print("creating stduout")
             logStreamFormatter = logging.Formatter(fmt=self.fmt, datefmt=self.datefmt)
             handler = logging.StreamHandler(stream=sys.stdout)
             handler.setFormatter(logStreamFormatter)

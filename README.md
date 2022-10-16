@@ -188,6 +188,71 @@ Log("errors")
 Log.index
 ```
 
+### Create one separate log for every instance of a Class
+For output like this:
+```
+Instance 1|2022-10-16T08:50:29+0100|method_1 did something!
+Instance 2|2022-10-16T08:29:05+0100|method_1 did something!
+Instance 1|2022-10-16T08:53:17+0100|This message was logged directly
+Instance 2|2022-10-16T08:54:06+0100|Likewise, but different instance
+```
+
+Follow this recipe:
+```
+from log2d import Log
+
+class MyClass:
+    def __init__(self, name):
+        params = {"fmt": Log.presets["name_and_time"]}
+        self.log = Log.index.get(name) or Log(name, **params)
+
+    def method_1(self):
+        # Do something
+        self.log("method_1 did something!")
+
+x = MyClass("Instance 1")
+x.method_1()
+y = MyClass("Instance 2")
+y.method_1()
+x.log("This message was logged directly")
+y.log("Likewise, but different instance")
+```
+
+### Create a single shared log for all instances of a Class
+For output like this:
+```
+MyClass|2022-10-16T08:43:31+0100|method_1 of Instance X did something!
+MyClass|2022-10-16T08:43:45+0100|method_1 of Instance Y did something!
+MyClass|2022-10-16T08:57:52+0100|This message was logged by Instance X
+MyClass|2022-10-16T08:58:18+0100|And this one by Instance Y
+```
+
+Follow this recipe:
+```
+from log2d import Log
+
+class MyAbstractClass:
+    def __init__(self, name, *args, **kwargs):
+        params = {"fmt": Log.presets["name_and_time"]}
+        self.log = Log.index.get(name) or Log(name, **params)
+
+class MyClass(MyAbstractClass):
+    def __init__(self, name, *args, **kwargs):
+        super().__init__(self.__class__.__name__, *args, **kwargs)
+        self.name = name
+
+    def method_1(self):
+        # Do something
+        self.log(f"method_1 of {self.name} did something!")
+
+x = MyClass("Instance X")
+x.method_1()
+y = MyClass("Instance Y")
+y.method_1()
+x.log(f"This message was logged by {x.name}")
+y.log(f"And this one by {y.name}")
+```
+
 ## USING LOGGING AND LOG2D AT THE SAME TIME
 
 You may find yourself using code that already has `logging` enabled.  This won't interfere with any loggers you subsequently create with `log2d` but you might find that some `log2d` messages are repeated (inhrerited) by the RootLogger `logging.Logger.root`, for example echoing WARNING level messages to stdout even though you've explicitly disabled this in your `log2d` logger.

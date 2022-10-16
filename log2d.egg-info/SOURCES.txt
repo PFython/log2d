@@ -2,8 +2,6 @@ LICENSE
 README.md
 setup.py
 log2d/__init__.py
-log2d/log2d.py
-log2d/test_log2d.py
 log2d.egg-info/PKG-INFO
 log2d.egg-info/SOURCES.txt
 log2d.egg-info/dependency_links.txt

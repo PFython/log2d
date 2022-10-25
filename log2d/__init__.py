@@ -17,7 +17,7 @@ class Log():
         "am_pm": "%d/%m/%Y %I:%M:%S %p",
     }
     presets = {
-        "name_level_time": "%(name)s|%(levelname)-7s|%(asctime)s|%(message)s",
+        "name_level_time": "%(name)s|%(levelname)-8s|%(asctime)s|%(message)s",
         "name_and_time": "%(name)s|%(asctime)s|%(message)s",
         "timestamp_only": "%(asctime)s|%(message)s",
         "file_func_name": "%(levelname)-8s|%(asctime)s|line %(lineno)s of function: %(funcName)s in %(filename)s|%(message)s",
@@ -31,25 +31,25 @@ class Log():
     to_stdout = True
     path = Path.cwd()
     mode = "a"
-    backup_count = 5
+    backup_count = 0
 
     def __init__(self, name, **kwargs):
         self.name = name
-        for keyword in "path level fmt datefmt to_file to_stdout mode backup_count".split():
-            if keyword not in kwargs:
-                kwargs[keyword] = getattr(Log, keyword)
-            setattr(self, keyword,  kwargs.get(keyword))
+        self.logger = logging.getLogger(self.name)
+        for key in "path level fmt datefmt to_file to_stdout mode backup_count".split():
+            value = kwargs.get(key) if key in kwargs else getattr(Log, key)
+            setattr(self, keyword, value)
         self.path = Path(self.path)
         self.mode = self.mode.lower()
         self.level_int = getattr(logging, self.level.upper())
-        logger = logging.getLogger(self.name)
-        logger.setLevel(level=self.level_int)
-        if kwargs.get("path") and self.to_file is None:
+        self.logger.setLevel(level=self.level_int)
+        if "path" in kwargs and "to_file" not in kwargs:
             self.to_file = True
+        if kwargs.get("to_file") and "to_stdout" not in kwargs:
+            self.to_stdout = False
         for handler in self.get_handlers():
-            logger.addHandler(handler)
-        self.logger = logger
-        setattr(Log, self.name, logger)
+            self.logger.addHandler(handler)
+        setattr(Log, self.name, self.logger)
         Log.index[self.name] = self
 
     def get_handlers(self):

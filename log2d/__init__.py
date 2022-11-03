@@ -38,7 +38,7 @@ class Log():
         self.logger = logging.getLogger(self.name)
         for key in "path level fmt datefmt to_file to_stdout mode backup_count".split():
             value = kwargs.get(key) if key in kwargs else getattr(Log, key)
-            setattr(self, keyword, value)
+            setattr(self, key, value)
         self.path = Path(self.path)
         self.mode = self.mode.lower()
         self.level_int = getattr(logging, self.level.upper())

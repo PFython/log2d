@@ -35,7 +35,7 @@ Log("main")
 Log.main.warning("Danger, Will Robinson!")
 
 Output:
-main|WARNING|2022-09-25 12:38:07|Danger, Will Robinson!
+main|WARNING |2022-10-25T19:34:30+0100|Danger, Will Robinson!
 ```
 
 > _In place of `.warning` you can use any of the standard log levels, either upper or lower case: DEBUG, INFO, WARNING, ERROR, and CRITICAL_
@@ -78,7 +78,7 @@ log_failure = Log("failures")
 log_failure("Insert your failure message here")
 
 Output:
-failures|DEBUG  |2022-09-25 12:37:33|Insert your failure message here
+failures|DEBUG   |2022-10-25T19:35:06+0100|Insert your failure message here
 ```
 > _Normal considerations regarding _namespaces_ apply however, and for longer/more complex scripts it might be wiser to stick with the explicit naming convention `Log.logger_name()`._
 >
@@ -176,9 +176,12 @@ dir(log)
 ### **Recipe 1: Create one log file per Module**
 
 ```
+from log2d import Log, Path
+
 if __name__ == '__main__':
     log = Log(Path(__file__).stem, to_file=True).logger
 
+    # Then just reuse the log object elsewhere in your script e.g.:
     file_name = Path(__file__).name
     log.critical(f'critical message from: {file_name}')
     log.error(f'error message from: {file_name}')
@@ -188,11 +191,11 @@ if __name__ == '__main__':
 
 """
 OUTPUT:
-pete|CRITICAL|2022-10-25T16:32:50+0100|critical message from: pete.py
-pete|ERROR   |2022-10-25T16:32:50+0100|error message from: pete.py
-pete|WARNING |2022-10-25T16:32:50+0100|new warning message from: pete.py
-pete|INFO    |2022-10-25T16:32:50+0100|info message from: pete.py
-pete|DEBUG   |2022-10-25T16:32:50+0100|debug message from: pete.py
+my_file|CRITICAL|2022-10-25T16:32:50+0100|critical message from: my_file.py
+my_file|ERROR   |2022-10-25T16:32:50+0100|error message from: my_file.py
+my_file|WARNING |2022-10-25T16:32:50+0100|new warning message from: my_file.py
+my_file|INFO    |2022-10-25T16:32:50+0100|info message from: my_file.py
+my_file|DEBUG   |2022-10-25T16:32:50+0100|debug message from: my_file.py
 """
  ```
 
@@ -259,13 +262,45 @@ MyClass|2022-10-16T08:43:45+0100|method_1 of Instance Y did something!
 MyClass|2022-10-16T08:57:52+0100|This message was logged by Instance X
 MyClass|2022-10-16T08:58:18+0100|And this one by Instance Y
 """
+
+
+```
+### **Recipe 4: Use a preset message/date format, or supply your own:**
+
+```
+fmt = Log.presets["func_file_name"]
+datefmt = Log.date_formats["date_and_time"]
+
+Log("main", fmt=fmt, datefmt=datefmt)
+```
+```
+fmt = '%(asctime)s:%(levelname)s:%(name)s:%(message)s'
+datefmt = '%d/%m/%Y %I:%M:%S %p'
+
+Log("main", fmt=fmt, datefmt=datefmt)
 ```
 
-### **Recipe 4: Create multiple logs with same/similar settings**
+>_For more information on composing your own formats see:_
+>
+> _https://docs.python.org/3/library/logging.html#formatter-objects_
+>
+> _https://docs.python.org/3/library/logging.html#logging.LogRecord_
+
+### **Recipe 5: Add a new date format or message format preset at the Class level, so that future instances can use them:**
+```
+
+fmt = "%(asctime)s (%(name)s): %(message)s"
+datefmt = "%m-%d %H:%M"
+
+Log.presets["my_message_format"] = fmt
+Log.date_formats["my_date_format"] = datefmt
+```
+
+### **Recipe 6: Example web-scraping setup**
 
 As shown earlier, values for `level`, `fmt`, `datefmt`, `to_file`, `to_stdout`, `path`, `mode`, and `backup_count` can be set for a specific logger by supplying them as keyword arguments on initialisation.
 
-Where no argument is supplied for a new logger, the class level defaults will be used.  Default attributes can also be set at a class level so that all subsequent loggers have the same or similar settings:
+Where no argument is supplied for a new logger, the Class level defaults will be used.  Default attributes can also be set at a class level so that all subsequent loggers have the same or similar settings:
 
 ```
 from log2d import Log
@@ -280,42 +315,16 @@ Log.to_stdout = False
 Log.mode = "w"
 Log.backup_count = 10
 
-Log("progress", to_stdout=True)
+Log("main", to_stdout=True)
 Log("selenium")
-Log("http")
+Log("requests")
 Log("timings")
+Log("results")
 Log("retries")
 Log("errors")
 ```
-### **Recipe 5: Use a preset message/date format, or supply your own:**
 
-```
-fmt = Log.presets["func_file_name"]
-datefmt = Log.date_formats["date_and_time"]
 
-Log("main", fmt=fmt, datefmt=datefmt)
-```
-```
-fmt = '%(asctime)s:%(levelname)s:%(name)s:%(message)s'
-datefmt = '%d/%m/%Y %I:%M:%S %p'
-
-Log("main", fmt=fmt, datefmt=datefmt)
-```
-### **Recipe 6: Add a new date format or message format preset at the class level, so that future instances can use them:**
-```
-
-fmt = "%(asctime)s (%(name)s): %(message)s"
-datefmt = "%m-%d %H:%M"
-
-Log.presets["my_message_format"] = fmt
-Log.date_formats["my_date_format"] = datefmt
-```
-
->_For more information on composing your own formats see:_
->
-> _https://docs.python.org/3/library/logging.html#formatter-objects_
->
-> _https://docs.python.org/3/library/logging.html#logging.LogRecord_
 ## **USING LOGGING AND LOG2D AT THE SAME TIME**
 
 You may find yourself using code that already has `logging` enabled.  This won't interfere with any loggers you *subsequently* create with `log2d` but you might find that some `log2d` messages are repeated (inhrerited) by the existing RootLogger `logging.Logger.root`, for example echoing WARNING level messages to stdout even though you've explicitly disabled this in your `log2d` logger.

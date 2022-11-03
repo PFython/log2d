@@ -1,15 +1,14 @@
 Metadata-Version: 2.1
 Name: log2d
-Version: 0.0.12
-Summary: Simple, sane, and sensible logging
-Home-page: https://github.com/PFython/log2d
-Download-URL: https://github.com/PFython/log2d/archive/0.0.12.tar.gz
+Version: 0.0.16
+Summary: Simple, sane, and sensible Logging
+Home-page: https://github.com/Pfython/log2d
+Download-URL: https://github.com/Pfython/log2d/archive/0.0.16.tar.gz
 Author: Peter Fison
 Author-email: peter@awsom.solutions
 License: MIT License
-Keywords: Logging,Logger,Output,Log,
-Platform: UNKNOWN
-Classifier: Development Status :: 4 - Beta
+Keywords: log2d,logging,log,logs,monitoring,simple,sensible,sane
+Classifier: Development Status :: 5 - Production/Stable
 Classifier: Intended Audience :: Developers
 Classifier: Operating System :: OS Independent
 Classifier: Programming Language :: Python :: 3.10
@@ -17,27 +16,34 @@ Classifier: Programming Language :: Python :: 3.6
 Classifier: Programming Language :: Python :: 3.7
 Classifier: Programming Language :: Python :: 3.8
 Classifier: Programming Language :: Python :: 3.9
-Classifier: Topic :: Internet
-Classifier: Topic :: Internet :: Log Analysis
+Classifier: Topic :: Database
+Classifier: Topic :: Desktop Environment :: File Managers
 Classifier: Topic :: Internet :: WWW/HTTP
 Classifier: Topic :: Internet :: WWW/HTTP :: Session
-Classifier: Topic :: Security
+Classifier: Topic :: Scientific/Engineering :: Information Analysis
 Classifier: Topic :: Software Development
-Classifier: Topic :: Software Development :: Bug Tracking
 Classifier: Topic :: Software Development :: Debuggers
 Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: Software Development :: Quality Assurance
 Classifier: Topic :: Software Development :: Testing
+Classifier: Topic :: Software Development :: Testing :: Acceptance
+Classifier: Topic :: Software Development :: Testing :: Unit
 Classifier: Topic :: System
+Classifier: Topic :: System :: Benchmark
 Classifier: Topic :: System :: Logging
 Classifier: Topic :: System :: Monitoring
 Classifier: Topic :: System :: Networking
+Classifier: Topic :: System :: Systems Administration
+Classifier: Topic :: Terminals
 Classifier: Topic :: Utilities
 Classifier: License :: OSI Approved :: MIT License
 Description-Content-Type: text/markdown
 License-File: LICENSE
 
-## INTRODUCTION
-`log2d` is a simple but powerful wrapper around Python's `logging` module in the standard library and can be installed via PIP in the normal way:
+# `log2d` - Simple, sane, and sensible logging
+
+## **INTRODUCTION**
+`log2d` is an incredibly helpful wrapper around Python's `logging` module in the standard library and can be installed via PIP in the normal way:
 ```
 python -m pip install log2d --upgrade
 ```
@@ -46,23 +52,25 @@ It aims to provide the best parts of `logging` (like automatic, rotating backup 
 
 If you've dipped into the standard `logging` documentation you'd be forgiven for thinking you can only log output according to the prescribed log levels: DEBUG, INFO, WARNING, ERROR, or CRITICAL.  Such an approach is linear or "1 Dimensional" since it's based solely on the *importance* of a message.
 
-A very common use case however is the need to capture different *types* of message.  Hence TWO dimensions - imagine a graph with "Type" on one axis and "Importance" on the other...  Each log message is given a destination on the graph based on these two values.
+A very common use case however is the need to capture different *types* of message.  Hence TWO dimensions.
 
 In web-scraping apps for example, it's useful to collect the HTTP requests which succeeded or failed or needed a few retries, quite apart from any general Exceptions arising from your actual code.  You might also want a nice (separate) log of overall progress and timings i.e. how long particular scrapers take to complete.
 
 `log2d` makes it simple to create, customise, and use a new logger for each of these types of output, for example sending `progress` messages just to the console, and creating separate `.log` files for `successes`, `failures`, `retries`, `exceptions`, and `timings`.
 
+
 It does so in a concise, readable, and (dare I claim?) "Pythonic" way, that doesn't require mastery of the `logging` module itself.  It allows you to create a sophisticated logger with powerful default features enabled in just one line of code, then send output to that logger whenever and from wherever you like - also in just one line.
 
-## SETUP
+At the end of this README there are some simple Cookbook recipes for dynamically creating a log for any given Module, Class, or Instance.
+## **SETUP**
 Simply import the `Log` class into your Python script:
 ```
 from log2d import Log
 ```
 
-## BASIC USE
+## **BASIC USE**
 
-### Create a named logger that only outputs to the console ("stdout") using default message formatting and date format:
+### **Create a named logger that only outputs to the console ("stdout") using default message formatting and date format:**
 
 ```
 Log("main")
@@ -74,12 +82,38 @@ main|WARNING|2022-09-25 12:38:07|Danger, Will Robinson!
 
 > _In place of `.warning` you can use any of the standard log levels, either upper or lower case: DEBUG, INFO, WARNING, ERROR, and CRITICAL_
 
-### Set a minimum level of message to capture (in plain English rather than using numeric values):
+### **Create a logger that just outputs to a file:**
+
+```
+log_success = Log("success", to_file=True)
+log_success("log2d for the win!")
+Log.success.critical("Alert! Alert!")
+
+(Creates and updates ./success.log)
+```
+
+> _NB The 'sensible' default logic of `log2d` assumes that if you ONLY specify `to_file` as a parameter, you ONLY want output to go to file, and output to the console (`to_stdout`) is automatically set to `False`_
+>
+> _The default values for `to_stdout` and `to_file` are `True` and `False` respectively.  In other words if you provide neither parameter, logging is to the console only._
+>
+> _The default file logging `mode` is `a` - append log messages to the existing log mode indefiintely.  See below for file logging mode `w` which overwrites the log file each time the script is run._
+### **Specify a folder/directory for a specific logger:**
+```
+Log("my_title", path="./output")
+```
+> _NB `to_file` is automatically set to True if a `path` is supplied._
+>
+> _The default path is the current working directory `""` or `"."`_
+>
+> _If a non-existent folder/directory is specified, `FileNotFoundError` will be raised._
+
+
+### **Set a minimum level of message to capture (in plain English rather than using numeric values):**
 
 ```
 Log("my_title", level="WARNING")
 ```
-### Create your own shortcut to log a message at the default level:
+### **Create your own shortcut to log a message at the default level:**
 For simple scripts with no or few imports you might like to create your own shortcut functions like this:
 ```
 log_failure = Log("failures")
@@ -94,27 +128,7 @@ failures|DEBUG  |2022-09-25 12:37:33|Insert your failure message here
 >
 > _The default log level used by `log2d` is actually DEBUG, whereas the `logging` default is WARNING.  This change is intended to make things safer and more predictable for new users who might otherwise be sending DEBUG and INFO level messages and wondering why they're not being logged._
 
-
-### Create a logger that just outputs to a file:
-
-```
-log_success = Log("success", to_file=True, to_stdout=False)
-log_success("log2d for the win!")
-Log.success.critical("Alert! Alert!")
-
-(Creates and updates ./success.log)
-```
-### Specify a folder/directory for a specific logger:
-```
-Log("my_title", path="./output")
-```
-> _NB `to_file` is automatically set to True if a `path` is supplied._
->
-> _The default path is the current working directory `""` or `"."`_
->
-> _If a non-existent folder/directory is specified, `FileNotFoundError` will be raised._
-
-## ABOUT LOGGER NAMES
+## **ABOUT LOGGER NAMES**
 
 1) You **can** create a logger name with spaces and other characters rather than underscores, but you wouldn't then be able to use Python's nice `.attribute` notation.  If your log name was "my main log" you'd need to use `getattr(Log, "my main log").warning("...")` instead, which is a bit messy.  Best to just use underscores if you can.
 
@@ -144,19 +158,25 @@ If you don't want to use this 'inheritance' feature, just avoid using the name "
 
 > _(See also USING LOGGING AND LOG2D AT THE SAME TIME below)_
 
-## OTHER KEYWORD OPTIONS AND UTILITY METHODS
+## **OTHER KEYWORD OPTIONS AND UTILITY METHODS**
 
-### Create a new log file for each session and automatically create 10 rotating backups:
+### **Create a new log file for each session overwriting the previous file each time:**
 
 ```
-results = Log("session_results", to_file=True, mode="a", backup_count=10)
+results = Log("session_results", to_file=True, mode="w")
+```
+
+### **Create a new log file for each session and automatically create 10 rotating backups:**
+
+```
+results = Log("session_results", to_file=True, mode="w", backup_count=10)
 ```
 > _The current log file will always be `session_results.log` but for subsequent sessions this will be copied to `session_results.log.1` then `session_results.log.2` etc until the backup count is reached, then start again on a rotating basis._
 >
 > _If `backup_count` is not specified, the default number of backups is 5._
 
 
-### Preview a particular message format and/or date format - either one of the supplied presets, or one of your own design:
+### **Preview a particular message format and/or date format - either one of the supplied presets, or one of your own design:**
 
 ```
 Log.preview(fmt=Log.presets["timestamp_only"], datefmt=Log.date_formats["time"])
@@ -171,71 +191,55 @@ temp_preview|09-25::15:36|This is a preview log entry.
 ```
 
 
-### Preview all combinations of message/date presets:
+### **Preview all combinations of message/date presets:**
 
 ```
 Log.preview_all()
 ```
 
-### Create a logger using a preset message/date format or one of your own design:
-
-```
-Log("my_title", fmt=Log.presets["func_file_name"], datefmt=Log.date_formats["date_and_time"])
-```
-### Add a new date format or message format preset at the class level, such that future instances can use them:
-```
-Log.date_formats["my_date_format"] = "%m-%d %H:%M"
-Log.presets["my_message_format"] = "%(asctime)s (%(name)s): %(message)s"
-```
-
->_For more information on composing your own formats see:_
->
-> _https://docs.python.org/3/library/logging.html#formatter-objects_
->
-> _https://docs.python.org/3/library/logging.html#logging.LogRecord_
-
-### Create multiple logs with same/similar settings
-
-As shown above, values for `level`, `fmt`, `datefmt`, `to_file`, `to_stdout`, `path`, `mode`, and `backup_count` can be set for a specific logger by supplying them as keyword arguments on initialisation.
-
-Where no argument is supplied for a new logger, the class level defaults will be used.  Default attributes can also be set at a class level so that all subsequent loggers have the same or similar settings:
-
-```
-from log2d import Log
-
-ROOT_DIR = "./my_app_path"
-
-Log.path = f"{ROOT_DIR}/logs/"
-Log.fmt = Log.presets["name_and_time"]
-Log.datefmt = Log.date_formats["time"]
-Log.to_file = True
-Log.to_stdout = False
-Log.mode = "w"
-Log.backup_count = 10
-
-Log("progress", to_stdout=True)
-Log("selenium")
-Log("http")
-Log("timings")
-Log("retries")
-Log("errors")
-```
-### Access a list of all `Log` instances:
+### **List all `Log` instances:**
 
 ```
 Log.index
 ```
-
-### Create one separate log for every instance of a Class
-For output like this:
+### Access the underlying `logging.Logger` object for even more control
 ```
-Instance 1|2022-10-16T08:50:29+0100|method_1 did something!
-Instance 2|2022-10-16T08:29:05+0100|method_1 did something!
-Instance 1|2022-10-16T08:53:17+0100|This message was logged directly
-Instance 2|2022-10-16T08:54:06+0100|Likewise, but different instance
-```
+log = Log("main").logger
 
-Follow this recipe:
+type(log)
+<class 'logging.Logger'>
+
+dir(log)
+[...
+'addFilter', 'addHandler', 'callHandlers', 'critical', 'debug', 'disabled', 'error', 'exception', 'fatal', 'filter', 'filters', 'findCaller', 'getChild', 'getEffectiveLevel', 'handle', 'handlers', 'hasHandlers', 'info', 'isEnabledFor', 'level', 'log', 'makeRecord', 'manager', 'name', 'parent', 'propagate', 'removeFilter', 'removeHandler', 'root', 'setLevel', 'warn', 'warning']
+```
+## **COOKBOOK**
+
+### **Recipe 1: Create one log file per Module**
+
+```
+if __name__ == '__main__':
+    log = Log(Path(__file__).stem, to_file=True).logger
+
+    file_name = Path(__file__).name
+    log.critical(f'critical message from: {file_name}')
+    log.error(f'error message from: {file_name}')
+    log.warning(f'new warning message from: {file_name}')
+    log.info(f'info message from: {file_name}')
+    log.debug(f'debug message from: {file_name}')
+
+"""
+OUTPUT:
+pete|CRITICAL|2022-10-25T16:32:50+0100|critical message from: pete.py
+pete|ERROR   |2022-10-25T16:32:50+0100|error message from: pete.py
+pete|WARNING |2022-10-25T16:32:50+0100|new warning message from: pete.py
+pete|INFO    |2022-10-25T16:32:50+0100|info message from: pete.py
+pete|DEBUG   |2022-10-25T16:32:50+0100|debug message from: pete.py
+"""
+ ```
+
+### **Recipe 2: Create one log file per Instance**
+
 ```
 from log2d import Log
 
@@ -254,18 +258,18 @@ y = MyClass("Instance 2")
 y.method_1()
 x.log("This message was logged directly")
 y.log("Likewise, but different instance")
+
+"""
+OUTPUT:
+Instance 1|2022-10-16T08:50:29+0100|method_1 did something!
+Instance 2|2022-10-16T08:29:05+0100|method_1 did something!
+Instance 1|2022-10-16T08:53:17+0100|This message was logged directly
+Instance 2|2022-10-16T08:54:06+0100|Likewise, but different instance
+"""
 ```
 
-### Create a single shared log for all instances of a Class
-For output like this:
-```
-MyClass|2022-10-16T08:43:31+0100|method_1 of Instance X did something!
-MyClass|2022-10-16T08:43:45+0100|method_1 of Instance Y did something!
-MyClass|2022-10-16T08:57:52+0100|This message was logged by Instance X
-MyClass|2022-10-16T08:58:18+0100|And this one by Instance Y
-```
+### **Recipe 3: Create one log file per Module**
 
-Follow this recipe:
 ```
 from log2d import Log
 
@@ -289,11 +293,74 @@ y = MyClass("Instance Y")
 y.method_1()
 x.log(f"This message was logged by {x.name}")
 y.log(f"And this one by {y.name}")
+
+"""
+OUTPUT:
+MyClass|2022-10-16T08:43:31+0100|method_1 of Instance X did something!
+MyClass|2022-10-16T08:43:45+0100|method_1 of Instance Y did something!
+MyClass|2022-10-16T08:57:52+0100|This message was logged by Instance X
+MyClass|2022-10-16T08:58:18+0100|And this one by Instance Y
+"""
 ```
 
-## USING LOGGING AND LOG2D AT THE SAME TIME
+### **Recipe 4: Create multiple logs with same/similar settings**
 
-You may find yourself using code that already has `logging` enabled.  This won't interfere with any loggers you subsequently create with `log2d` but you might find that some `log2d` messages are repeated (inhrerited) by the RootLogger `logging.Logger.root`, for example echoing WARNING level messages to stdout even though you've explicitly disabled this in your `log2d` logger.
+As shown earlier, values for `level`, `fmt`, `datefmt`, `to_file`, `to_stdout`, `path`, `mode`, and `backup_count` can be set for a specific logger by supplying them as keyword arguments on initialisation.
+
+Where no argument is supplied for a new logger, the class level defaults will be used.  Default attributes can also be set at a class level so that all subsequent loggers have the same or similar settings:
+
+```
+from log2d import Log
+
+ROOT_DIR = "./my_app_path"
+
+Log.path = f"{ROOT_DIR}/logs/"
+Log.fmt = Log.presets["name_and_time"]
+Log.datefmt = Log.date_formats["time"]
+Log.to_file = True
+Log.to_stdout = False
+Log.mode = "w"
+Log.backup_count = 10
+
+Log("progress", to_stdout=True)
+Log("selenium")
+Log("http")
+Log("timings")
+Log("retries")
+Log("errors")
+```
+### **Recipe 5: Use a preset message/date format, or supply your own:**
+
+```
+fmt = Log.presets["func_file_name"]
+datefmt = Log.date_formats["date_and_time"]
+
+Log("main", fmt=fmt, datefmt=datefmt)
+```
+```
+fmt = '%(asctime)s:%(levelname)s:%(name)s:%(message)s'
+datefmt = '%d/%m/%Y %I:%M:%S %p'
+
+Log("main", fmt=fmt, datefmt=datefmt)
+```
+### **Recipe 6: Add a new date format or message format preset at the class level, so that future instances can use them:**
+```
+
+fmt = "%(asctime)s (%(name)s): %(message)s"
+datefmt = "%m-%d %H:%M"
+
+Log.presets["my_message_format"] = fmt
+Log.date_formats["my_date_format"] = datefmt
+```
+
+>_For more information on composing your own formats see:_
+>
+> _https://docs.python.org/3/library/logging.html#formatter-objects_
+>
+> _https://docs.python.org/3/library/logging.html#logging.LogRecord_
+## **USING LOGGING AND LOG2D AT THE SAME TIME**
+
+You may find yourself using code that already has `logging` enabled.  This won't interfere with any loggers you *subsequently* create with `log2d` but you might find that some `log2d` messages are repeated (inhrerited) by the existing RootLogger `logging.Logger.root`, for example echoing WARNING level messages to stdout even though you've explicitly disabled this in your `log2d` logger.
 
 In case you were wondering, a `log2d` logger called "root" will inherit from other `log2d` loggers in a similar way to RootLogger but it is not the same entity as `logging.Logger.root` created by downstream code you've imported from.  Both can exist at the same time and be configured to behave differently.
 
@@ -311,14 +378,14 @@ Log.disable_rootlogger()
 
 This is a bit of a blunt instrument and basically finds all the Handlers used by RootLogger (`logging.Logger.root.handlers`) and runs the `.removeHandler()` method on them.
 
-If neither of these approaches give you what you need, you can dive a bit deeper into the `Log.get_handlers` method of `log2d` or the standard `logging` documentation to learn how to modify the behaviour of a particular Handler.  Of course that goes against the very reason for `log2d`'s existence - to offer simple, sane, and sensible logging _without_ the pain of having to learn its innner workings.  So if you've reached this point and need more control or sophistication with your logging, then `log2d` has probably served it's purpose and you're ready to move onwards and upwards!
+If neither of these approaches give you what you need, you can dive a bit deeper into the `Log.get_handlers` method of `log2d` or see above for accessubg the underlying `logging.Logger` object.
 
-## FEEDBACK AND CONTRIBUTING
+If you find yourself doing this, you'll inevitably find yourself reading the standard library `logging` documentation which of course goes against the very reason for `log2d`'s existence - to offer simple, sane, and sensible logging _without_ the pain of having to learn its innner workings.  So if you've reached this point and need more control or sophistication with your logging, then `log2d` has probably served it's purpose and you're ready to move onwards and upwards!
+
+## **FEEDBACK AND CONTRIBUTING**
 
 I'd be delighted to hear any suggestions, bug reports, or comments in the form of a Github ISSUE, and if you've found `log2d` useful or merely interesting please do click the "Star" button.  It really raises my spirits to see that kind of feedback.
 
-If you're in paid employment and `log2d` has saved you even 30 minutes' effort, please consider how much this gift equates to based on your daily/hourly rate, and whether it might feel good to spend a minute of your own time leaving a nice comment on BuyMeaCoffee.com?  Thank you.
+If you're in paid employment and `log2d` has saved you even a few minutes' effort, please consider how much this gift is worth based on your daily/hourly earnings, and whether it might feel good to at least leave a nice comment on BuyMeaCoffee.com?  Thank you.
 
 <a href="https://www.buymeacoffee.com/pfython" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/arial-yellow.png" alt="Buy Me A Coffee" width="217px" ></a>
-
-

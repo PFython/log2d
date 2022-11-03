@@ -7,7 +7,7 @@ from setuptools import setup
 
 NAME = "log2d"
 GITHUB_USERNAME = "Pfython"
-VERSION = "0.0.16"
+VERSION = "0.0.15"
 DESCRIPTION = "Simple, sane, and sensible Logging"
 LICENSE = "MIT License"
 AUTHOR = "Peter Fison"

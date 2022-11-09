@@ -1,5 +1,7 @@
 # `log2d` - Simple, sane, and sensible logging
 
+![](Logbook.png)
+
 ## **INTRODUCTION**
 `log2d` is an incredibly helpful wrapper around Python's `logging` module in the standard library and can be installed via PIP in the normal way:
 ```

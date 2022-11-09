@@ -1,7 +1,25 @@
 import pytest
-from pathlib import Path
 
-from log2d import Log
+from log2d import Log, Path
+
+def test_add_level():
+    """Test by visual inspection of console output"""
+    mylog = Log("mylog")
+    Log.mylog.debug("Debugging message...")
+    mylog.add_level("SUCCESS", 25)
+    Log.mylog.success("Success message...")
+
+def test_cant_add_existing_level():
+    with pytest.raises(AttributeError):
+        mylog = Log("mylog")
+        mylog.add_level("DEBUG", 20)
+
+def test_add_level_above_or_below():
+    mylog = Log("mylog")
+    mylog.add_level("PreError", below="ERROR")
+    Log.mylog.preerror(f"New log level {logging.PREERROR} below ERROR")
+    mylog.add_level("PostInfo", above="INFO")
+    Log.mylog.postinfo(f"New log level {logging.POSTINFO} above INFO ")
 
 def stop_handler(logger):
     for handler in logger.handlers:
@@ -32,9 +50,9 @@ def test_file_log():
 
 def test_shortcut():
     shortcut = Log("shortcut")
-    shortcut("This should get logged at default log level")
 
-def test_multiples(capfd):
+
+def test_output_destination(capfd):
     progress_log = Log("Progress", to_file=True)
     progress_log("Starting")
     out, err = capfd.readouterr()
@@ -43,10 +61,6 @@ def test_multiples(capfd):
     selenium_log("Started")
     out, err = capfd.readouterr()
     assert out == ""
-
-    http_log = Log("HTTP", to_file=True, to_stdout=False)
-    timing_log = Log("Timing", to_file=True, to_stdout=False)
-    retry_log = Log("Retry", to_file=True, to_stdout=False)
 
 def test_coexist_with_logging():
     import logging

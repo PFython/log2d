@@ -132,15 +132,23 @@ Log.mylog.newerror(f"New log level {logging.NEWERROR} below ERROR")
 Log.mylog.newinfo(f"New log level {logging.NEWINFO} above INFO ")
 
 Output:
+"New log level 'newerror' added with value: 39"
+"New log level 'newinfo' added with value: 21"
 mylog|NEWERROR|2022-11-09T06:17:00+0000|New log level 39 below ERROR
 mylog|NEWINFO |2022-11-09T06:17:17+0000|New log level 21 above INFO
 ```
 
-This method will overwrite previous log levels at a given value if they already exist, and creates the new log level _immediately_ above or below the reference log level i.e. with no gaps.  For greater control over the postion of log levels, you can also specify the log level value explicitly:
+This method returns a confirmation message rather than logging its own output and potentially messing up your pristine logging schema.  You can suppress it by assigning a dummy variable e.g.
 
 ```
-mylog.add_level("SUCCESS", 25)
-Log.mylog.success("Success message...")
+_ = mylog.add_level("NewError", below="ERROR")
+```
+
+`.add_level()` will also overwrite previous log levels at a given value if they already exist, and create the new log level _immediately_ above or below the reference log level i.e. without leaving any gaps.  For explicit control over the postion of log levels, you can also specify the log level value numerically:
+
+```
+mylog.add_level("TRACE", 15)
+Log.mylog.trace("Trace message...")
 ```
 ### **Create a new log file for each session overwriting the previous file each time:**
 

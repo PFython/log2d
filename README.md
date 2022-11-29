@@ -1,5 +1,7 @@
 # `log2d` - Simple, sane, and sensible logging
 
+![](https://media.giphy.com/media/xT8qBsOjMOcdeGJIU8/giphy.gif)
+
 ## **INTRODUCTION**
 `log2d` is an incredibly helpful wrapper around Python's `logging` module in the standard library and can be installed via PIP in the normal way:
 ```
@@ -8,7 +10,7 @@ python -m pip install log2d --upgrade
 
 It aims to provide the best parts of `logging` (like automatic, rotating backup files) to users who don't want or need to learn every nuance of the module itself and perhaps simply want to wean themselves off `print()` statements and organise their output in a better "2 Dimensional" way (hence the name - `log2d`).
 
-If you've dipped into the standard `logging` documentation you'd be forgiven for thinking you can only log output according to the prescribed log levels: DEBUG, INFO, WARNING, ERROR, or CRITICAL.  Such an approach is linear or "1 Dimensional" since it's based solely on the *importance* of a message.
+If you've dipped into the standard `logging` documentation you'd be forgiven for thinking you can only log output according to the prescribed log levels: DEBUG, INFO, WARNING, ERROR, or CRITICAL/FATAL.  Such an approach is linear or "1 Dimensional" since it's based solely on the *importance* of a message.
 
 A very common use case however is the need to capture different *types* of message.  Hence TWO dimensions.
 
@@ -38,7 +40,7 @@ Output:
 main|WARNING |2022-10-25T19:34:30+0100|Danger, Will Robinson!
 ```
 
-> _In place of `.warning` you can use any of the standard log levels, either upper or lower case: DEBUG, INFO, WARNING, ERROR, and CRITICAL_
+> _In place of `.warning` you can use any of the standard log levels, either upper or lower case: DEBUG, INFO, WARNING, ERROR, and CRITICAL/FATAL_
 
 ### **Create a logger that just outputs to a file:**
 
@@ -118,6 +120,38 @@ If you don't want to use this 'inheritance' feature, just avoid using the name "
 
 ## **OTHER KEYWORD OPTIONS AND UTILITY METHODS**
 
+### **Add Custom logging levels**
+
+```
+from log2d import Log, logging
+
+mylog = Log("mylog")
+
+mylog.add_level("NewError", below="ERROR")
+mylog.add_level("NewInfo", above="INFO")
+
+Log.mylog.newerror(f"New log level {logging.NEWERROR} below ERROR")
+Log.mylog.newinfo(f"New log level {logging.NEWINFO} above INFO ")
+
+Output:
+"New log level 'newerror' added with value: 39"
+"New log level 'newinfo' added with value: 21"
+mylog|NEWERROR|2022-11-09T06:17:00+0000|New log level 39 below ERROR
+mylog|NEWINFO |2022-11-09T06:17:17+0000|New log level 21 above INFO
+```
+
+This method returns a confirmation message rather than logging its own output and potentially messing up your pristine logging schema.  You can suppress it by assigning a dummy variable e.g.
+
+```
+_ = mylog.add_level("NewError", below="ERROR")
+```
+
+`.add_level()` will also overwrite previous log levels at a given value if they already exist, and create the new log level _immediately_ above or below the reference log level i.e. without leaving any gaps.  For explicit control over the postion of log levels, you can also specify the log level value numerically:
+
+```
+mylog.add_level("TRACE", 15)
+Log.mylog.trace("Trace message...")
+```
 ### **Create a new log file for each session overwriting the previous file each time:**
 
 ```
@@ -160,14 +194,15 @@ Log.preview_all()
 ```
 Log.index
 ```
-### Access the underlying `logging.Logger` object for even more control
-```
-log = Log("main").logger
 
-type(log)
+### **Access the underlying `logging.Logger` object for even more control**
+```
+logger = Log("main").logger
+
+type(logger)
 <class 'logging.Logger'>
 
-dir(log)
+dir(logger)
 [...
 'addFilter', 'addHandler', 'callHandlers', 'critical', 'debug', 'disabled', 'error', 'exception', 'fatal', 'filter', 'filters', 'findCaller', 'getChild', 'getEffectiveLevel', 'handle', 'handlers', 'hasHandlers', 'info', 'isEnabledFor', 'level', 'log', 'makeRecord', 'manager', 'name', 'parent', 'propagate', 'removeFilter', 'removeHandler', 'root', 'setLevel', 'warn', 'warning']
 ```
@@ -268,7 +303,7 @@ MyClass|2022-10-16T08:58:18+0100|And this one by Instance Y
 ### **Recipe 4: Use a preset message/date format, or supply your own:**
 
 ```
-fmt = Log.presets["func_file_name"]
+fmt = Log.presets["file_func_name"]
 datefmt = Log.date_formats["date_and_time"]
 
 Log("main", fmt=fmt, datefmt=datefmt)

@@ -1,9 +1,9 @@
 Metadata-Version: 2.1
 Name: log2d
-Version: 0.0.16
+Version: 0.0.17
 Summary: Simple, sane, and sensible Logging
 Home-page: https://github.com/Pfython/log2d
-Download-URL: https://github.com/Pfython/log2d/archive/0.0.16.tar.gz
+Download-URL: https://github.com/Pfython/log2d/archive/0.0.17.tar.gz
 Author: Peter Fison
 Author-email: peter@awsom.solutions
 License: MIT License
@@ -50,7 +50,7 @@ python -m pip install log2d --upgrade
 
 It aims to provide the best parts of `logging` (like automatic, rotating backup files) to users who don't want or need to learn every nuance of the module itself and perhaps simply want to wean themselves off `print()` statements and organise their output in a better "2 Dimensional" way (hence the name - `log2d`).
 
-If you've dipped into the standard `logging` documentation you'd be forgiven for thinking you can only log output according to the prescribed log levels: DEBUG, INFO, WARNING, ERROR, or CRITICAL.  Such an approach is linear or "1 Dimensional" since it's based solely on the *importance* of a message.
+If you've dipped into the standard `logging` documentation you'd be forgiven for thinking you can only log output according to the prescribed log levels: DEBUG, INFO, WARNING, ERROR, or CRITICAL/FATAL.  Such an approach is linear or "1 Dimensional" since it's based solely on the *importance* of a message.
 
 A very common use case however is the need to capture different *types* of message.  Hence TWO dimensions.
 
@@ -77,10 +77,10 @@ Log("main")
 Log.main.warning("Danger, Will Robinson!")
 
 Output:
-main|WARNING|2022-09-25 12:38:07|Danger, Will Robinson!
+main|WARNING |2022-10-25T19:34:30+0100|Danger, Will Robinson!
 ```
 
-> _In place of `.warning` you can use any of the standard log levels, either upper or lower case: DEBUG, INFO, WARNING, ERROR, and CRITICAL_
+> _In place of `.warning` you can use any of the standard log levels, either upper or lower case: DEBUG, INFO, WARNING, ERROR, and CRITICAL/FATAL_
 
 ### **Create a logger that just outputs to a file:**
 
@@ -120,7 +120,7 @@ log_failure = Log("failures")
 log_failure("Insert your failure message here")
 
 Output:
-failures|DEBUG  |2022-09-25 12:37:33|Insert your failure message here
+failures|DEBUG   |2022-10-25T19:35:06+0100|Insert your failure message here
 ```
 > _Normal considerations regarding _namespaces_ apply however, and for longer/more complex scripts it might be wiser to stick with the explicit naming convention `Log.logger_name()`._
 >
@@ -160,6 +160,38 @@ If you don't want to use this 'inheritance' feature, just avoid using the name "
 
 ## **OTHER KEYWORD OPTIONS AND UTILITY METHODS**
 
+### **Add Custom logging levels**
+
+```
+from log2d import Log, logging
+
+mylog = Log("mylog")
+
+mylog.add_level("NewError", below="ERROR")
+mylog.add_level("NewInfo", above="INFO")
+
+Log.mylog.newerror(f"New log level {logging.NEWERROR} below ERROR")
+Log.mylog.newinfo(f"New log level {logging.NEWINFO} above INFO ")
+
+Output:
+"New log level 'newerror' added with value: 39"
+"New log level 'newinfo' added with value: 21"
+mylog|NEWERROR|2022-11-09T06:17:00+0000|New log level 39 below ERROR
+mylog|NEWINFO |2022-11-09T06:17:17+0000|New log level 21 above INFO
+```
+
+This method returns a confirmation message rather than logging its own output and potentially messing up your pristine logging schema.  You can suppress it by assigning a dummy variable e.g.
+
+```
+_ = mylog.add_level("NewError", below="ERROR")
+```
+
+`.add_level()` will also overwrite previous log levels at a given value if they already exist, and create the new log level _immediately_ above or below the reference log level i.e. without leaving any gaps.  For explicit control over the postion of log levels, you can also specify the log level value numerically:
+
+```
+mylog.add_level("TRACE", 15)
+Log.mylog.trace("Trace message...")
+```
 ### **Create a new log file for each session overwriting the previous file each time:**
 
 ```
@@ -218,9 +250,12 @@ dir(log)
 ### **Recipe 1: Create one log file per Module**
 
 ```
+from log2d import Log, Path
+
 if __name__ == '__main__':
     log = Log(Path(__file__).stem, to_file=True).logger
 
+    # Then just reuse the log object elsewhere in your script e.g.:
     file_name = Path(__file__).name
     log.critical(f'critical message from: {file_name}')
     log.error(f'error message from: {file_name}')
@@ -230,11 +265,11 @@ if __name__ == '__main__':
 
 """
 OUTPUT:
-pete|CRITICAL|2022-10-25T16:32:50+0100|critical message from: pete.py
-pete|ERROR   |2022-10-25T16:32:50+0100|error message from: pete.py
-pete|WARNING |2022-10-25T16:32:50+0100|new warning message from: pete.py
-pete|INFO    |2022-10-25T16:32:50+0100|info message from: pete.py
-pete|DEBUG   |2022-10-25T16:32:50+0100|debug message from: pete.py
+my_file|CRITICAL|2022-10-25T16:32:50+0100|critical message from: my_file.py
+my_file|ERROR   |2022-10-25T16:32:50+0100|error message from: my_file.py
+my_file|WARNING |2022-10-25T16:32:50+0100|new warning message from: my_file.py
+my_file|INFO    |2022-10-25T16:32:50+0100|info message from: my_file.py
+my_file|DEBUG   |2022-10-25T16:32:50+0100|debug message from: my_file.py
 """
  ```
 
@@ -301,13 +336,45 @@ MyClass|2022-10-16T08:43:45+0100|method_1 of Instance Y did something!
 MyClass|2022-10-16T08:57:52+0100|This message was logged by Instance X
 MyClass|2022-10-16T08:58:18+0100|And this one by Instance Y
 """
+
+
+```
+### **Recipe 4: Use a preset message/date format, or supply your own:**
+
+```
+fmt = Log.presets["func_file_name"]
+datefmt = Log.date_formats["date_and_time"]
+
+Log("main", fmt=fmt, datefmt=datefmt)
+```
+```
+fmt = '%(asctime)s:%(levelname)s:%(name)s:%(message)s'
+datefmt = '%d/%m/%Y %I:%M:%S %p'
+
+Log("main", fmt=fmt, datefmt=datefmt)
 ```
 
-### **Recipe 4: Create multiple logs with same/similar settings**
+>_For more information on composing your own formats see:_
+>
+> _https://docs.python.org/3/library/logging.html#formatter-objects_
+>
+> _https://docs.python.org/3/library/logging.html#logging.LogRecord_
+
+### **Recipe 5: Add a new date format or message format preset at the Class level, so that future instances can use them:**
+```
+
+fmt = "%(asctime)s (%(name)s): %(message)s"
+datefmt = "%m-%d %H:%M"
+
+Log.presets["my_message_format"] = fmt
+Log.date_formats["my_date_format"] = datefmt
+```
+
+### **Recipe 6: Example web-scraping setup**
 
 As shown earlier, values for `level`, `fmt`, `datefmt`, `to_file`, `to_stdout`, `path`, `mode`, and `backup_count` can be set for a specific logger by supplying them as keyword arguments on initialisation.
 
-Where no argument is supplied for a new logger, the class level defaults will be used.  Default attributes can also be set at a class level so that all subsequent loggers have the same or similar settings:
+Where no argument is supplied for a new logger, the Class level defaults will be used.  Default attributes can also be set at a class level so that all subsequent loggers have the same or similar settings:
 
 ```
 from log2d import Log
@@ -322,42 +389,16 @@ Log.to_stdout = False
 Log.mode = "w"
 Log.backup_count = 10
 
-Log("progress", to_stdout=True)
+Log("main", to_stdout=True)
 Log("selenium")
-Log("http")
+Log("requests")
 Log("timings")
+Log("results")
 Log("retries")
 Log("errors")
 ```
-### **Recipe 5: Use a preset message/date format, or supply your own:**
 
-```
-fmt = Log.presets["func_file_name"]
-datefmt = Log.date_formats["date_and_time"]
 
-Log("main", fmt=fmt, datefmt=datefmt)
-```
-```
-fmt = '%(asctime)s:%(levelname)s:%(name)s:%(message)s'
-datefmt = '%d/%m/%Y %I:%M:%S %p'
-
-Log("main", fmt=fmt, datefmt=datefmt)
-```
-### **Recipe 6: Add a new date format or message format preset at the class level, so that future instances can use them:**
-```
-
-fmt = "%(asctime)s (%(name)s): %(message)s"
-datefmt = "%m-%d %H:%M"
-
-Log.presets["my_message_format"] = fmt
-Log.date_formats["my_date_format"] = datefmt
-```
-
->_For more information on composing your own formats see:_
->
-> _https://docs.python.org/3/library/logging.html#formatter-objects_
->
-> _https://docs.python.org/3/library/logging.html#logging.LogRecord_
 ## **USING LOGGING AND LOG2D AT THE SAME TIME**
 
 You may find yourself using code that already has `logging` enabled.  This won't interfere with any loggers you *subsequently* create with `log2d` but you might find that some `log2d` messages are repeated (inhrerited) by the existing RootLogger `logging.Logger.root`, for example echoing WARNING level messages to stdout even though you've explicitly disabled this in your `log2d` logger.

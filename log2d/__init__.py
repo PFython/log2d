@@ -3,7 +3,6 @@ import logging.handlers
 import sys
 from pathlib import Path
 
-
 class Log():
     """
     Convenience class for creating and using logging objects e.g.
@@ -73,6 +72,28 @@ class Log():
             handler.setLevel(level=self.level_int)
             handlers += [handler]
         return handlers
+
+    def add_level(self, level_name, level_value=20, below="", above=""):
+        """
+        Add a custom log level at a specific numeric value or below/above
+        an existing log level
+        """
+        if below:
+            level_value = getattr(logging, below.upper()) - 1
+        if above:
+            level_value = getattr(logging, above.upper()) + 1
+        upper_name = level_name.upper()
+        lower_name = level_name.lower()
+        names = [upper_name, lower_name, level_name]
+        if any(hasattr(logging, x) for x in names):
+            raise AttributeError(f'{upper_name} level already defined')
+        setattr(logging, upper_name, level_value)
+        logging.addLevelName(level_value, upper_name)
+        def log_message(message, *args):
+            if self.logger.isEnabledFor(level_value):
+                return self.logger._log(level_value, message, args)
+        setattr(self.logger, lower_name, log_message)
+        return f"New log level '{lower_name}' added with value: {level_value}"
 
     def __call__(self, *args, **kwargs):
         """

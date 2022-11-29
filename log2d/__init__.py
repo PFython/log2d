@@ -3,7 +3,6 @@ import logging.handlers
 import sys
 from pathlib import Path
 
-
 class Log():
     """
     Convenience class for creating and using logging objects e.g.
@@ -90,7 +89,10 @@ class Log():
             raise AttributeError(f'{upper_name} level already defined')
         setattr(logging, upper_name, level_value)
         logging.addLevelName(level_value, upper_name)
-        setattr(self.logger, lower_name, lambda message, *args: self.logger._log(level_value, message, args))
+        def log_message(message, *args):
+            if self.logger.isEnabledFor(level_value):
+                return self.logger._log(level_value, message, args)
+        setattr(self.logger, lower_name, log_message)
         return f"New log level '{lower_name}' added with value: {level_value}"
 
     def __call__(self, *args, **kwargs):

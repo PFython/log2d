@@ -1,6 +1,6 @@
 # `log2d` - Simple, sane, and sensible logging
 
-![](Logbook.png)
+![](https://media.giphy.com/media/xT8qBsOjMOcdeGJIU8/giphy.gif)
 
 ## **INTRODUCTION**
 `log2d` is an incredibly helpful wrapper around Python's `logging` module in the standard library and can be installed via PIP in the normal way:
@@ -194,14 +194,15 @@ Log.preview_all()
 ```
 Log.index
 ```
-### Access the underlying `logging.Logger` object for even more control
-```
-log = Log("main").logger
 
-type(log)
+### **Access the underlying `logging.Logger` object for even more control**
+```
+logger = Log("main").logger
+
+type(logger)
 <class 'logging.Logger'>
 
-dir(log)
+dir(logger)
 [...
 'addFilter', 'addHandler', 'callHandlers', 'critical', 'debug', 'disabled', 'error', 'exception', 'fatal', 'filter', 'filters', 'findCaller', 'getChild', 'getEffectiveLevel', 'handle', 'handlers', 'hasHandlers', 'info', 'isEnabledFor', 'level', 'log', 'makeRecord', 'manager', 'name', 'parent', 'propagate', 'removeFilter', 'removeHandler', 'root', 'setLevel', 'warn', 'warning']
 ```
@@ -302,7 +303,7 @@ MyClass|2022-10-16T08:58:18+0100|And this one by Instance Y
 ### **Recipe 4: Use a preset message/date format, or supply your own:**
 
 ```
-fmt = Log.presets["func_file_name"]
+fmt = Log.presets["file_func_name"]
 datefmt = Log.date_formats["date_and_time"]
 
 Log("main", fmt=fmt, datefmt=datefmt)

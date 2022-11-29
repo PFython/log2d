@@ -21,22 +21,17 @@ def test_add_level_above_or_below():
     mylog.add_level("PostInfo", above="INFO")
     Log.mylog.postinfo(f"New log level {logging.POSTINFO} above INFO ")
 
-def stop_handler(logger):
-    for handler in logger.handlers:
-        logger.removeHandler(handler)
-        handler.close()
-
 def test_defaults():
     main = Log("main")
     assert main.name == 'main'
     assert main.mode == 'a'
     assert main.path
     assert main.level == 'debug'
-    assert main.fmt == '%(name)s|%(levelname)-7s|%(asctime)s|%(message)s'
+    assert main.fmt == '%(name)s|%(levelname)-8s|%(asctime)s|%(message)s'
     assert main.datefmt == '%Y-%m-%dT%H:%M:%S%z'
     assert main.to_file == False
     assert main.to_stdout == True
-    assert main.backup_count == 5
+    assert main.backup_count == 0
     assert main.logger
 
 def test_file_log():
@@ -45,12 +40,14 @@ def test_file_log():
     path = Path("Test.log")
     assert path.is_file()
     assert path.read_text().endswith("|Entry 1\n")
-    stop_handler(Log.Test)
     path.unlink()
 
 def test_shortcut():
     shortcut = Log("shortcut")
-
+    shortcut("This should be logged at the default log level (DEBUG)")
+    Log.shortcut.setLevel('CRITICAL')
+    shortcut("This should be logged at the new CRITICAL level")
+    Log.shortcut.info("This should not be logged")
 
 def test_output_destination(capfd):
     progress_log = Log("Progress", to_file=True)
@@ -70,3 +67,21 @@ def test_coexist_with_logging():
     other("This will be echoed twice - 'root' and 'other'")
     Log.disable_rootlogger()
     other("This should only appear once now")
+
+def test_set_level() -> bool:
+    lg = Log("testlog")
+    success = lg.add_level("Success", above="INFO")
+    assert success == "New log level 'success' added with value: 21"
+    fail = lg.add_level("Fail", above="SUCCESS")
+    assert fail == "New log level 'fail' added with value: 22"
+
+    msg = "This should appear in all log levels above DEBUG"
+    lg.logger.success(f"{msg}: Success!")
+    lg.logger.info(f"{msg}: Info!")
+    lg.logger.fail(f"{msg}: Fail!")
+
+    lg.logger.setLevel('CRITICAL')
+    msg = "This should NOT appear in log levels below CRITICAL"
+    lg.logger.success(f"{msg}: Success!")
+    lg.logger.info(f"{msg}: Info!")
+    lg.logger.fail(f"{msg}: Fail!")

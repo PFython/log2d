@@ -1,6 +1,7 @@
 import logging
 import logging.handlers
 import sys
+from re import compile as reCompile
 from pathlib import Path
 
 class Log():
@@ -108,7 +109,7 @@ class Log():
                ignorecase:  set case insensitivity. Default True
                autoparse:   if True, parses the log to find separator, time and level fields. 
                             If False, looks at log2d fmt string.  Default False
-            Returns [MSG, ...] or []
+            Returns [MSG[, ...]], [error message] or []
         """
         def _autoParse(FN):
             """Attempts to automatically parse log file to return [separator, date, level] fields"""
@@ -116,7 +117,7 @@ class Log():
             SEP = grp = splitln = ''
             LVL = TS = -1
             # Find the LEVEL which then gives surrounding sepatator
-            q = re.compile(query)
+            q = reCompile(query)
             try:
                 with open(FN, mode='r') as lf:
                     for ln in lf:
@@ -206,7 +207,7 @@ class Log():
                 _startTm, _endTm = _endTm, _startTm
         except:
             return [f"Find start/End time error: {date}|{deltadays}"]
-        # TODO: Better way to get this (private) internal variable?šŠūŪžŽß
+        # TODO: Better way to get this (private) internal variable?
         LLevels = logging._nameToLevel
         try:
             SL = LLevels[level.upper()]  # log level to search for
@@ -239,7 +240,7 @@ class Log():
                         ln = ln if _queryLevel(_LVL) else ''
                     if ln:
                         RES.append(ln.strip())
-        # Finally, return anything found
+        # Finally, return anything found or error message
         return RES
 
     def __call__(self, *args, **kwargs):

@@ -16,7 +16,7 @@ A very common use case however is the need to capture different *types* of messa
 
 In web-scraping apps for example, it's useful to collect the HTTP requests which succeeded or failed or needed a few retries, quite apart from any general Exceptions arising from your actual code.  You might also want a nice (separate) log of overall progress and timings i.e. how long particular scrapers take to complete.
 
-`log2d` makes it simple to create, customise, and use a new logger for each of these types of output, for example sending `progress` messages just to the console, and creating separate `.log` files for `successes`, `failures`, `retries`, `exceptions`, and `timings`.
+`log2d` makes it simple to create, customise, and use a new logger for each of these types of output, for example sending `progress` messages just to the console, and creating separate `.log` files for `successes`, `failures`, `retries`, `exceptions`, and `timings`. It also lets you search these logs for specific message text or level or over specific time periods.
 
 
 It does so in a concise, readable, and (dare I claim?) "Pythonic" way, that doesn't require mastery of the `logging` module itself.  It allows you to create a sophisticated logger with powerful default features enabled in just one line of code, then send output to that logger whenever and from wherever you like - also in just one line.
@@ -87,6 +87,16 @@ failures|DEBUG   |2022-10-25T19:35:06+0100|Insert your failure message here
 > _You could use this shortcut feature to overwrite the `print` functions in existing code, and convert every old `print()` line into a logging command.  `_print = print; print = Log("print")`_
 >
 > _The default log level used by `log2d` is actually DEBUG, whereas the `logging` default is WARNING.  This change is intended to make things safer and more predictable for new users who might otherwise be sending DEBUG and INFO level messages and wondering why they're not being logged._
+
+### **Search your log**
+You can search your log for any text or messages above a particular level and within a particular time period.
+```
+log_search = Log("MyApp", path="/.output")
+log_search.find(level="error")  # Returns a list of all ERROR and above messages in last 7 days
+log_search.find("except", ignorecase=True, deltadays=-31)  # Case insensitive search for all messages containing 'except'
+                                                            within the last month
+log_search.find(logname="/path/to/logfile")  # Returns all entries in the external logfile with the last 7 days
+```
 
 ## **ABOUT LOGGER NAMES**
 
@@ -184,12 +194,7 @@ temp_preview|09-25::15:36|This is a preview log entry.
 
 
 ### **Preview all combinations of message/date presets:**
-
-```
-Log.preview_all()
-```
-
-### **List all `Log` instances:**
+deltadays=-30
 
 ```
 Log.index

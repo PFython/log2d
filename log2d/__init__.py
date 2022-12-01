@@ -3,9 +3,9 @@ import logging.handlers
 import sys
 import os
 from re import compile as reCompile
+from pathlib import Path
 from datetime import datetime, timedelta
 from dateutil import parser
-from pathlib import Path
 
 class Log():
     """
@@ -98,7 +98,7 @@ class Log():
                 return self.logger._log(level_value, message, args)
         setattr(self.logger, lower_name, log_message)
         return f"New log level '{lower_name}' added with value: {level_value}"
-    
+
     def find(self, text: str="", logname=None, date=None, deltadays: int=-7,
              level: str='NOTSET', separator: str="|",
              ignorecase: bool=True, autoparse: bool=False):
@@ -135,8 +135,8 @@ class Log():
                                 SEP = ln[e]
                             else:
                                 SEP = ln[s-1]
-                            grp = m.group().strip()   # LEVEL found
                             splitln = ln.split(SEP)
+                            grp = m.group().strip(SEP)   # LEVEL found
                             break
                         except:
                             continue

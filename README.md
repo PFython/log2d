@@ -16,7 +16,7 @@ A very common use case however is the need to capture different *types* of messa
 
 In web-scraping apps for example, it's useful to collect the HTTP requests which succeeded or failed or needed a few retries, quite apart from any general Exceptions arising from your actual code.  You might also want a nice (separate) log of overall progress and timings i.e. how long particular scrapers take to complete.
 
-`log2d` makes it simple to create, customise, and use a new logger for each of these types of output, for example sending `progress` messages just to the console, and creating separate `.log` files for `successes`, `failures`, `retries`, `exceptions`, and `timings`. It also lets you search these logs for specific message text or level or over specific time periods.
+`log2d` makes it simple to create, customise, and use a new logger for each of these types of output, for example sending `progress` messages just to the console, and creating separate `.log` files for `successes`, `failures`, `retries`, `exceptions`, and `timings`. It also lets you search these logs for specific message text, level or over specific time periods.
 
 
 It does so in a concise, readable, and (dare I claim?) "Pythonic" way, that doesn't require mastery of the `logging` module itself.  It allows you to create a sophisticated logger with powerful default features enabled in just one line of code, then send output to that logger whenever and from wherever you like - also in just one line.
@@ -89,13 +89,13 @@ failures|DEBUG   |2022-10-25T19:35:06+0100|Insert your failure message here
 > _The default log level used by `log2d` is actually DEBUG, whereas the `logging` default is WARNING.  This change is intended to make things safer and more predictable for new users who might otherwise be sending DEBUG and INFO level messages and wondering why they're not being logged._
 
 ### **Search your log**
-You can search your log for any text or messages above a particular level and within a particular time period.
+You can search your log (or any other log) for any text or messages above a particular level and within a particular time period, and return a list of found records.
 ```
 log_search = Log("MyApp", path="/.output")
-log_search.find(level="error")  # Returns a list of all ERROR and above messages in last 7 days
-log_search.find("except", ignorecase=True, deltadays=-31)  # Case insensitive search for all messages containing 'except'
-                                                            within the last month
-log_search.find(logname="/path/to/logfile")  # Returns all entries in the external logfile with the last 7 days
+Res = log_search.find(level="error")  # Returns a list of all ERROR and above messages in last 7 days
+Res = log_search.find(text="except", ignorecase=True, deltadays=-31)  # Case insensitive search for all messages
+                                                                        containing 'except' within the last month
+Res = log_search.find(logname="/path/to/logfile")  # Returns all entries in the named logfile in the last 7 days
 ```
 
 ## **ABOUT LOGGER NAMES**
@@ -161,6 +161,43 @@ _ = mylog.add_level("NewError", below="ERROR")
 ```
 mylog.add_level("TRACE", 15)
 Log.mylog.trace("Trace message...")
+```
+
+### **Search a log**
+```
+from log2d import Log
+
+mylog = Log("testlog", to_file=True)
+Log.testlog.info("Test info message")
+
+Res = mylog.find()   # Default: all entries for last seven days
+
+Output: Res is a list containing 8 items
+testlog|FAIL    |2022-11-14T19:25:45+0000|Test error message at added level: Fail!
+testlog|INFO    |2022-11-18T11:17:49+0000|Test info message
+testlog|ERROR   |2022-11-18T11:22:37+0000|Test error message
+testlog|INFO    |2022-11-19T08:39:40+0000|Test info message
+testlog|SUCCESS |2022-11-19T08:40:04+0000|Three line message
+    with more data on this line
+      and also on this line too!
+testlog|INFO    |2022-11-19T08:40:48+0000|Test info message
+```
+### **Search above level**
+```
+...
+Res = mylog.find(level="error")
+Output:  Res is
+testlog|ERROR   |2022-11-18T11:22:37+0000|Test error message
+```
+
+### **Search for text**
+```
+...
+Res = mylog.find(text="error")
+Output:  Res is
+testlog|FAIL    |2022-11-14T19:25:45+0000|Test error message at added level: Fail!
+testlog|ERROR   |2022-11-18T11:22:37+0000|Test error message
+
 ```
 ### **Create a new log file for each session overwriting the previous file each time:**
 

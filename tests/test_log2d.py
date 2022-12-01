@@ -85,3 +85,81 @@ def test_set_level() -> bool:
     lg.logger.success(f"{msg}: Success!")
     lg.logger.info(f"{msg}: Info!")
     lg.logger.fail(f"{msg}: Fail!")
+
+   
+def test_find() -> bool:
+    """Testing find method"""
+    _log = "findlog"
+    _HPath="."
+
+    _fn = os.path.join(_HPath, _log + ".log")
+    # remove existing log
+    try:
+        os.remove(_fn)
+    except:
+        pass
+
+    lg = Log(_log)
+    lg.logger.info("A log message - console only")
+    Res = lg.find()
+    assert Res[0][:14] == "No log file at", f"FIND1: Found a log file - should be absent!"
+
+    # Create dummy log
+    aWhileAgo = datetime.now()- timedelta(days=8)
+    with open(_fn, "w") as dummyLog:
+        for I in range(6):
+            T = aWhileAgo + timedelta(days=I)
+            dummyLog.write(f"dummylg|INFO    |{T.strftime('%Y-%m-%dT%H:%M:%S%z+0000')}|Log message\n") 
+        dummyLog.write("  Here is additional line 1\n   Additional line 2 followed by a blank line\n\n")
+
+    lg = Log(_log, path=_HPath)
+    msg ="Should be line in log"
+    lg.logger.info(f"{msg}: Last line")
+    Res = lg.find()
+    assert ": Last line" in Res[-1], f"FIND2: Incorrect last record"
+    sleep(1)  # wait a bit
+    T = datetime.now()
+    sleep(1)
+    lg.logger.critical(f"{msg}: New last line")
+    # Search from T:+1day
+    Res = lg.find(date=T, deltadays=1)
+    assert len(Res) == 1, f"FIND3: Expected 1 record, found {len(Res)}"
+    assert "CRITICAL" in Res[0], f"FIND4: CRITICAL message not found"
+
+    lg.logger.error(f"{msg}: Yet another last line")
+    Res = lg.find(text="error")
+    assert "ERROR" in Res[0], f"FIND5: ERROR message not found"
+    Res = lg.find(text="error", ignorecase=False)
+    assert not Res
+    Res = lg.find(level="error")
+    assert len(Res) == 2, f"FIND6: Expected 2 records, found {len(Res)}"
+
+    # Text searches
+    lg.logger.warning("This line won't be in search")
+    Res = lg.find('should')
+    assert len(Res) > 0, f"FIND7: 'Should' not found"
+    for ln in Res:
+        assert "won't" not in ln, f'FIND8: Found "Won\'t" in "{ln}"'
+    Res = lg.find("should", ignorecase=False)
+    assert not Res, f"FIND9: Found 'Should' with case sensitive search"
+    Res = lg.find(text='new')
+    assert len(Res) == 1, f"FIND10: Expected 1 record, found {len(Res)}"
+
+    # Search -5 to -8 days ago
+    T -= timedelta(days=3)
+    Res = lg.find(date=T, deltadays=-3)
+    assert len(Res) == 6, f"FIND11: Olddates - Expected 6 records, got {len(Res)}"
+    assert not Res[-1], f"FIND12: olddates - found last record was '{Res[-1]}''"
+    Res2 = lg.find(date=T, deltadays=-3, autoparse=True)
+    assert Res == Res2, f"FIND13: Autoparse - Gives different result"
+
+    lg1 = Log('anotherlog')
+    Res = lg1.find(logname=_fn, date=T, deltadays=-3)
+    assert len(Res) == 6, f"FIND14: Anotherlog - Expected 6 lines found {len(Res)}"
+    assert not Res[-1], f"FIND15: Anotherlog - found last line was '{Res[-1]}'"
+
+    # Tidy up if OK
+    os.remove(_fn)
+
+    print("FIND passes 15 tests OK")
+    return True

@@ -231,8 +231,12 @@ temp_preview|09-25::15:36|This is a preview log entry.
 
 
 ### **Preview all combinations of message/date presets:**
-deltadays=-30
 
+```
+Log.preview_all()
+```
+
+### **List all `Log` instances:**
 ```
 Log.index
 ```

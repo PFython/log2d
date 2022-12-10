@@ -92,10 +92,14 @@ failures|DEBUG   |2022-10-25T19:35:06+0100|Insert your failure message here
 You can search your log (or any other log) for any text or messages above a particular level and within a particular time period, and return a list of found records.
 ```
 log_search = Log("MyApp", path="/.output")
-Res = log_search.find(level="error")  # Returns a list of all ERROR and above messages in last 7 days
-Res = log_search.find(text="except", ignorecase=True, deltadays=-31)  # Case insensitive search for all messages
-                                                                        containing 'except' within the last month
-Res = log_search.find(logname="/path/to/logfile")  # Returns all entries in the named logfile in the last 7 days
+Res = log_search.find(level="error")
+# Returns a list of all ERROR and above messages in last 7 days
+
+Res = log_search.find(text="except", ignorecase=True, deltadays=-31)
+# Case insensitive search for all messages containing 'except' within the last month
+
+Res = log_search.find(logname="/path/to/logfile")
+# Returns all entries in the named logfile in the last 7 days
 ```
 
 ## **ABOUT LOGGER NAMES**

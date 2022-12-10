@@ -124,6 +124,7 @@ If you don't want to use this 'inheritance' feature, just avoid using the name "
 The `.find()` method helps you easily search for text in messages above a particular level and/or within a particular time period:
 ```
 log_to_search = Log("MyApp", path="./output")
+
 results = log_to_search.find(level="error")
 # Returns a list of all ERROR and above messages in last 7 days
 

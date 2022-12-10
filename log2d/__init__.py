@@ -105,7 +105,7 @@ class Log():
         """ Search log for:
                text:        text to seach for. Default '' means return everything
                logname:     path/to/another/log.log to search. Default=None, search this log
-               date:        Date(time) object anchor for search. Default None = NOW
+               date:        Date(time) object/str anchor for search. Default None = NOW
                deltadays:   number of days prior to (-ve) or after date. Default 1 week prior
                level:       log level below which results are ignored. Default NOTSET
                separator:   field separator character in log record. Default |
@@ -204,7 +204,12 @@ class Log():
             return [f"Error parsing log format: Found '{SEP}', {TS}, {LVL}"]
         separator = SEP
         try:
-            _startTm = date if date else datetime.now()
+            if not date:
+                _startTm = datetime.now()
+            elif isinstance(date, str):
+                _startTm = parser.parse(date)
+            else:
+                _startTm = date
             _endTm = _startTm + timedelta(days=deltadays)
             if _startTm > _endTm:
                 _startTm, _endTm = _endTm, _startTm

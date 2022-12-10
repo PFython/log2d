@@ -442,4 +442,4 @@ If you're in paid employment and `log2d` has saved you even a few minutes' effor
 
 <a href="https://www.buymeacoffee.com/pfython" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/arial-yellow.png" alt="Buy Me A Coffee" width="217px" ></a>
 
-**Special Thanks** to Mike Pollard for the `.find()` utility.
+**Special Thanks** to [Mike Pollard](https://github.com/MikeDP) for the `.find()` utility.

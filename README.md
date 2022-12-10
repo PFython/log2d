@@ -441,3 +441,5 @@ I'd be delighted to hear any suggestions, bug reports, or comments in the form o
 If you're in paid employment and `log2d` has saved you even a few minutes' effort, please consider how much this gift is worth based on your daily/hourly earnings, and whether it might feel good to at least leave a nice comment on BuyMeaCoffee.com?  Thank you.
 
 <a href="https://www.buymeacoffee.com/pfython" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/arial-yellow.png" alt="Buy Me A Coffee" width="217px" ></a>
+
+**Special Thanks** to Mike Pollard for the `.find()` utility.

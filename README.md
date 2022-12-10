@@ -131,7 +131,7 @@ results = log_to_search.find(level="error")
 results = log_to_search.find(text="except", ignorecase=True, deltadays=-31)
 # Case insensitive search for all messages containing 'except' within the last month
 
-results = log_search.find(logname="/path/to/logfile")
+results = log_to_search.find(logname="/path/to/logfile")
 # Returns all entries in the named logfile in the last 7 days
 ```
 

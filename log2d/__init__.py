@@ -99,18 +99,18 @@ class Log():
         setattr(self.logger, lower_name, log_message)
         return f"New log level '{lower_name}' added with value: {level_value}"
 
-    def find(self, text: str="", logname=None, date=None, deltadays: int=-7,
+    def find(self, text: str="", path=None, date=None, deltadays: int=-7,
              level: str='NOTSET', separator: str="|",
              ignorecase: bool=True, autoparse: bool=False):
         """ Search log for:
                text:        text to seach for. Default '' means return everything
-               logname:     path/to/another/log.log to search. Default=None, search this log
+               path:     path/to/another/log.log to search. Default=None, search this log
                date:        Date(time) object/str anchor for search. Default None = NOW
                deltadays:   number of days prior to (-ve) or after date. Default 1 week prior
                level:       log level below which results are ignored. Default NOTSET
                separator:   field separator character in log record. Default |
                ignorecase:  set case insensitivity. Default True
-               autoparse:   if True, parses the log to find separator, time and level fields. 
+               autoparse:   if True, parses the log to find separator, time and level fields.
                             If False, looks at log2d fmt string.  Default False
             Returns [MSG[, ...]], [error message] or []
         """
@@ -190,8 +190,8 @@ class Log():
 
         # ############ MAIN for find ##############
         # Get the filename
-        if logname:  # External log
-            FN = logname
+        if path:  # External log
+            FN = path
             autoparse = True  # Always autoparse external files
         else:
             FN = os.path.join(self.path, self.name + '.log')

@@ -1,4 +1,5 @@
 import pytest
+import time
 
 from log2d import Log, Path
 
@@ -69,7 +70,7 @@ def test_coexist_with_logging():
     other("This should only appear once now")
 
 def test_set_level() -> bool:
-    lg = Log("testlog")
+    lg = Log("mylog")
     success = lg.add_level("Success", above="INFO")
     assert success == "New log level 'success' added with value: 21"
     fail = lg.add_level("Fail", above="SUCCESS")
@@ -86,7 +87,7 @@ def test_set_level() -> bool:
     lg.logger.info(f"{msg}: Info!")
     lg.logger.fail(f"{msg}: Fail!")
 
-   
+
 def test_find() -> bool:
     """Testing find method"""
     _log = "findlog"
@@ -109,7 +110,7 @@ def test_find() -> bool:
     with open(_fn, "w") as dummyLog:
         for I in range(6):
             T = aWhileAgo + timedelta(days=I)
-            dummyLog.write(f"dummylg|INFO    |{T.strftime('%Y-%m-%dT%H:%M:%S%z+0000')}|Log message\n") 
+            dummyLog.write(f"dummylg|INFO    |{T.strftime('%Y-%m-%dT%H:%M:%S%z+0000')}|Log message\n")
         dummyLog.write("  Here is additional line 1\n   Additional line 2 followed by a blank line\n\n")
 
     lg = Log(_log, path=_HPath)
@@ -154,7 +155,7 @@ def test_find() -> bool:
     assert Res == Res2, f"FIND13: Autoparse - Gives different result"
 
     lg1 = Log('anotherlog')
-    Res = lg1.find(logname=_fn, date=T, deltadays=-3)
+    Res = lg1.find(path=_fn, date=T, deltadays=-3)
     assert len(Res) == 6, f"FIND14: Anotherlog - Expected 6 lines found {len(Res)}"
     assert not Res[-1], f"FIND15: Anotherlog - found last line was '{Res[-1]}'"
 
@@ -163,3 +164,62 @@ def test_find() -> bool:
 
     print("FIND passes 15 tests OK")
     return True
+
+def cleanup():
+    """ Delete global `mylog` and its log file; delete Handler """
+    print("Deleting: mylog.log")
+    if Log.index.get('mylog'):
+        del Log.index['mylog']
+    if "mylog" in globals():
+        global mylog
+        for handler in mylog.logger.handlers:
+            mylog.logger.removeHandler(handler)
+            handler.close()
+        del mylog
+    path = Path("mylog.log")
+    logging.shutdown()
+    if path.is_file():
+        path.unlink()
+
+def create():
+    """
+    Create a global log2d instance `mylog`
+    Output to file and console; overwrite mode
+    """
+    cleanup()
+    global mylog
+    mylog = Log("mylog", to_file=True, to_stdout=True, mode="w")
+    print("Logging to console and mylog.log")
+
+def create_mylog(function):
+    """
+    A decorator to create and eventually clean up a generic test logger object.
+    Simply insert a line `@create_mylog` above `def test_X():`
+    """
+    def wrapper(*args, **kwargs):
+        create()
+        try:
+            result = function(*args, **kwargs)
+            cleanup()
+        except AssertionError:
+            cleanup()
+            raise
+        return result
+    return wrapper
+
+@create_mylog
+def test_find_multiline():
+    Log.mylog.info("Three line message\n\twith more data on this line\n\t\tand also on this line too!")
+    r = mylog.find()
+    assert len(r) == 2
+    assert r.count("\t") == 3
+    assert r.count("\n") == 2
+
+@create_mylog
+def test_find_levels():
+    Log.mylog.info("Oneline")
+    assert mylog.find(level="error") == []
+    assert mylog.find(level="ERRor") == []
+    assert len(mylog.find(level="info")) == 1
+    assert len(mylog.find(level="InFo")) == 1
+

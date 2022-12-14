@@ -1,5 +1,6 @@
 import pytest
 import logging
+import time
 from datetime import datetime, timedelta
 
 from log2d import Log, Path
@@ -180,6 +181,8 @@ def test_find_date_1():
 
 def test_find_by_date_2():
     create_dummy_log()
+    timestamp = datetime.now()
+    time.sleep(1)
     timestamp -= timedelta(days=3)
     result = mylog.find(date=timestamp, deltadays=-3)
     assert len(result) == 6, f"FIND11: Olddates - Expected 6 records, got {len(result)}"

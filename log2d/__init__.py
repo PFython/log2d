@@ -102,154 +102,162 @@ class Log():
     def find(self, text: str="", path=None, date=None, deltadays: int=-7,
              level: str='NOTSET', separator: str="|",
              ignorecase: bool=True, autoparse: bool=False):
-        """ Search log for:
-               text:        text to seach for. Default '' means return everything
-               path:     path/to/another/log.log to search. Default=None, search this log
-               date:        Date(time) object/str anchor for search. Default None = NOW
-               deltadays:   number of days prior to (-ve) or after date. Default 1 week prior
-               level:       log level below which results are ignored. Default NOTSET
-               separator:   field separator character in log record. Default |
-               ignorecase:  set case insensitivity. Default True
-               autoparse:   if True, parses the log to find separator, time and level fields.
-                            If False, looks at log2d fmt string.  Default False
-            Returns [MSG[, ...]], [error message] or []
         """
-        def _autoParse(FN):
+        Search log for:
+
+        text:        text to seach for. Default '' means return everything
+        path:     path/to/another/log.log to search. Default=None, search this log
+        date:        Date(time) object/str anchor for search. Default None = NOW
+        deltadays:   number of days prior to (-ve) or after date. Default 1 week prior
+        level:       log level below which results are ignored. Default NOTSET
+        separator:   field separator character in log record. Default |
+        ignorecase:  set case insensitivity. Default True
+        autoparse:   if True, parses the log to find separator, time and level.
+                     if False (default), looks at log2d fmt string.
+
+        Return:
+
+        List of search results, or None
+        """
+        def _auto_parse(path):
             """Attempts to automatically parse log file to return [separator, date, level] fields"""
-            query ='r"|CRITICAL\s*|INFO\s*|DEBUG\s*|WARNING\s*|NOTSET\s*|ERROR\s*|"'
-            SEP = grp = splitln = ''
-            LVL = TS = -1
-            # Find the LEVEL which then gives surrounding sepatator
-            q = reCompile(query)
+            query_str ='r"|CRITICAL\s*|INFO\s*|DEBUG\s*|WARNING\s*|NOTSET\s*|ERROR\s*|"'
+            separator = group = split_line = ''
+            level = timestamp = -1
+            # Find the LEVEL which then gives surrounding separator
+            query = reCompile(query_str)
             try:
-                with open(FN, mode='r') as lf:
-                    for ln in lf:
+                with open(path, mode='r') as log_file:
+                    for line in log_file:
                         try:
-                            m = q.search(ln)
-                            s, e = m.span() if m else (0, 0)
-                            if s - e == 0:  # s&e are the same so not found
+                            match = query.search(line)
+                            start, end = match.span() if match else (0, 0)
+                            if start - end == 0:
+                            # start & end are the same so not found
                                 continue
-                            if s == 0:
-                                if e > len(ln) - 2:
+                            if start == 0:
+                                if end > len(line) - 2:
                                     continue
-                                SEP = ln[e]
+                                separator = line[end]
                             else:
-                                SEP = ln[s-1]
-                            splitln = ln.split(SEP)
-                            grp = m.group().strip(SEP)   # LEVEL found
+                                separator = line[start-1]
+                            split_line = line.split(separator)
+                            group = match.group().strip(separator)
+                            # LEVEL found
                             break
                         except:
                             continue
-            except Exception as e:
+            except Exception as end:
                 return ['', -1, -1]
-
-            if SEP != '':
-                # Now find LEVEL and TIMESTAMP fields
+            if separator != '':
                 try:
-                    LVL = splitln.index(grp)  # Level field index
-                    for I, Fld in enumerate(splitln):
-                        try:  # Try to convert each field 'till we get timestamp
-                            _ = parser.parse(Fld, ignoretz=True)
-                            TS = I
+                    level = split_line.index(group)  # Level field index
+                    for index, field in enumerate(split_line):
+                        try:
+                            _ = parser.parse(field, ignoretz=True)
+                            timestamp = index
                             break
                         except:
                             continue
                 except:
                     pass
             # TODO: Further check result?
-            return [SEP, LVL, TS]
+            return [separator, level, timestamp]
 
-        def _getFmtFields():
-            """Check the fmt string to find level and time fields. Return as (separator, LVL, TM)"""
+        def _get_format_fields():
+            """
+            Check the fmt string to find level and time fields.
+            Return: (separator, level, asctime)
+            """
             _fmt = self.fmt.split(separator)
-            LVL = TM = -1
-            for I, F in enumerate(_fmt):
-                if "levelname" in F:
-                    LVL = I
-                if "asctime" in F:
-                    TM = I
-            return (separator, LVL, TM)
+            level = asctime = -1
+            for index, field in enumerate(_fmt):
+                if "levelname" in field:
+                    level = index
+                if "asctime" in field:
+                    asctime = index
+            return (separator, level, asctime)
 
-        def _queryLevel(s: str) -> bool:
+        def _query_level(level_str: str) -> bool:
             """Is record above required level? Return True/False """
-            # get numerical value
-            try:
-                V = LLevels[s]
-            except:  # Level not found
-                V = 50   # Set as CRITICAL
-            return V >= SL
+            level_not_found = 50  # i.e. CRITICAL
+            return log_levels.get("level_str", level_not_found) >= search_level
 
-        def _queryText(s: str) -> bool:
-            """Does record contain text? Return True/False"""
+        def _query_text(record_str: str) -> bool:
+            """Does record contain text?"""
             try:
-                R = (TXT in s.casefold()) if ignorecase else (TXT in s)
+                return (new_text in record_str.casefold()) if ignorecase else (new_text in record_str)
             except:
-                R = False  # TODO: should we raise an exception?
-            # Not found or error
-            return R
+                return False
 
-        # ############ MAIN for find ##############
-        # Get the filename
-        if path:  # External log
-            FN = path
-            autoparse = True  # Always autoparse external files
-        else:
-            FN = os.path.join(self.path, self.name + '.log')
-        if not os.path.exists(FN):
-            return [f'No log file at {FN}'] # log not found!
-        # Prepare args
-        SEP, LVL, TS = _autoParse(FN) if autoparse else _getFmtFields()
-
-        if SEP == '' or TS == -1 or LVL == -1:
-            return [f"Error parsing log format: Found '{SEP}', {TS}, {LVL}"]
-        separator = SEP
-        try:
-            if not date:
-                _startTm = datetime.now()
-            elif isinstance(date, str):
-                _startTm = parser.parse(date)
+        def _check_path(path):
+            if path is None:
+                path = Path(self.path) / f"{self.name}.log"
             else:
-                _startTm = date
-            _endTm = _startTm + timedelta(days=deltadays)
-            if _startTm > _endTm:
-                _startTm, _endTm = _endTm, _startTm
-        except:
-            return [f"Find start/End time error: {date}|{deltadays}"]
-        # TODO: Better way to get this (private) internal variable?
-        LLevels = logging._nameToLevel
+                path = Path(path)
+                autoparse = True  # Always autoparse external files
+            if not path.is_file():
+                raise Exception(f'No log file at {path}')
+            return path
+
+        def _initial_arguments():
+            separator, level, timestamp = _auto_parse(path) if autoparse else _get_format_fields()
+            if separator == '' or timestamp == -1 or level == -1:
+                raise Exception(f"Error parsing log format: Found '{separator}', {timestamp}, {level}")
+            return separator, level, timestamp
+
+        def _get_times():
+            try:
+                if not date:
+                    start_time = datetime.now()
+                elif isinstance(date, str):
+                    start_time = parser.parse(date)
+                else:
+                    start_time = date
+                end_time = start_time + timedelta(days=deltadays)
+                if start_time > end_time:
+                    start_time, end_time = end_time, start_time
+            except:
+                raise Exception(f"Find start/End time error: {date}|{deltadays}")
+            # TODO: Better way to get this (private) internal variable?
+            return start_time, end_time
+
+        def _find_results():
+            with open(path, mode='r') as log_file:
+                for line in log_file:
+                    split_line = line.split(separator)
+                    try:
+                        _level = split_line[level].strip()
+                        _timestamp = parser.parse(split_line[timestamp], ignoretz=True)
+                    except:  # Timestamp/level not found
+                        _timestamp = _last_timestamp
+                        _level = _last_level
+                    _last_timestamp = _timestamp
+                    _last_level = _level
+                    if start_time <= _timestamp:
+                        if _timestamp > end_time:
+                            break
+                        if new_text:
+                            line = line if (_query_text(line) and _query_level(_level)) else ''
+                        else:
+                            line = line if _query_level(_level) else ''
+                        if line:
+                            results.append(line.strip())
+            return results
+
+        path = _check_path(path)
+        separator, level, timestamp = _initial_arguments()
+        start_time, end_time = _get_times()
+        log_levels = logging._nameToLevel
         try:
-            SL = LLevels[level.upper()]  # log level to search for
-        except Exception as e:
-            SL = 0
-        TXT = text.casefold() if ignorecase else text  # search text
-        # Set initial result state
-        RES = []
-        _lastTS = _startTm - timedelta(days=1)  # Initialise to before start
-        _lastLVL = "INFO"
-        with open(FN, mode='r') as _LOG:
-            # and search file
-            for ln in _LOG:
-                splitln = ln.split(separator)
-                try:  # Get timestamp and level
-                    _LVL = splitln[LVL].strip()
-                    _TS = parser.parse(splitln[TS], ignoretz=True)
-                except:  # Timestamp/level not found
-                    _TS = _lastTS  # Recover last good timestamp and LVL
-                    _LVL = _lastLVL
-                _lastTS = _TS   # save timestamp and level for next line
-                _lastLVL = _LVL
-                #  within time period?
-                if _startTm <= _TS:
-                    if _TS > _endTm:
-                        break   # No need to read any more
-                    if TXT:
-                        ln = ln if (_queryText(ln) and _queryLevel(_LVL)) else ''
-                    else:
-                        ln = ln if _queryLevel(_LVL) else ''
-                    if ln:
-                        RES.append(ln.strip())
-        # Finally, return anything found or error message
-        return RES
+            search_level = log_levels[level.upper()]  # log level to search for
+        except Exception:
+            search_level = 0
+        new_text = text.casefold() if ignorecase else text
+        results = []
+        _last_timestamp = start_time - timedelta(days=1)
+        _last_level = "INFO"
+        return _find_results()
 
     def __call__(self, *args, **kwargs):
         """

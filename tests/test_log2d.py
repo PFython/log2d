@@ -70,40 +70,32 @@ def test_coexist_with_logging():
     other("This should only appear once now")
 
 def test_set_level() -> bool:
-    lg = Log("mylog")
-    success = lg.add_level("Success", above="INFO")
+    mylog = Log("mylog")
+    success = mylog.add_level("Success", above="INFO")
     assert success == "New log level 'success' added with value: 21"
-    fail = lg.add_level("Fail", above="SUCCESS")
+    fail = mylog.add_level("Fail", above="SUCCESS")
     assert fail == "New log level 'fail' added with value: 22"
 
     msg = "This should appear in all log levels above DEBUG"
-    lg.logger.success(f"{msg}: Success!")
-    lg.logger.info(f"{msg}: Info!")
-    lg.logger.fail(f"{msg}: Fail!")
+    mylog.logger.success(f"{msg}: Success!")
+    mylog.logger.info(f"{msg}: Info!")
+    mylog.logger.fail(f"{msg}: Fail!")
 
-    lg.logger.setLevel('CRITICAL')
+    mylog.logger.setLevel('CRITICAL')
     msg = "This should NOT appear in log levels below CRITICAL"
-    lg.logger.success(f"{msg}: Success!")
-    lg.logger.info(f"{msg}: Info!")
-    lg.logger.fail(f"{msg}: Fail!")
+    mylog.logger.success(f"{msg}: Success!")
+    mylog.logger.info(f"{msg}: Info!")
+    mylog.logger.fail(f"{msg}: Fail!")
 
 
+@create_mylog
 def test_find() -> bool:
     """Testing find method"""
-    _log = "findlog"
-    _HPath="."
+    mylog = Log("findlog")
 
-    _fn = os.path.join(_HPath, _log + ".log")
-    # remove existing log
-    try:
-        os.remove(_fn)
-    except:
-        pass
-
-    lg = Log(_log)
-    lg.logger.info("A log message - console only")
-    Res = lg.find()
-    assert Res[0][:14] == "No log file at", f"FIND1: Found a log file - should be absent!"
+    mylog.logger.info("A log message - console only")
+    result = mylog.find()
+    assert result[0][:14] == "No log file at", f"FIND1: Found a log file - should be absent!"
 
     # Create dummy log
     aWhileAgo = datetime.now()- timedelta(days=8)
@@ -113,51 +105,51 @@ def test_find() -> bool:
             dummyLog.write(f"dummylg|INFO    |{T.strftime('%Y-%m-%dT%H:%M:%S%z+0000')}|Log message\n")
         dummyLog.write("  Here is additional line 1\n   Additional line 2 followed by a blank line\n\n")
 
-    lg = Log(_log, path=_HPath)
+    mylog = Log(_log, path=_HPath)
     msg ="Should be line in log"
-    lg.logger.info(f"{msg}: Last line")
-    Res = lg.find()
-    assert ": Last line" in Res[-1], f"FIND2: Incorrect last record"
+    mylog.logger.info(f"{msg}: Last line")
+    result = mylog.find()
+    assert ": Last line" in result[-1], f"FIND2: Incorrect last record"
     sleep(1)  # wait a bit
     T = datetime.now()
     sleep(1)
-    lg.logger.critical(f"{msg}: New last line")
+    mylog.logger.critical(f"{msg}: New last line")
     # Search from T:+1day
-    Res = lg.find(date=T, deltadays=1)
-    assert len(Res) == 1, f"FIND3: Expected 1 record, found {len(Res)}"
-    assert "CRITICAL" in Res[0], f"FIND4: CRITICAL message not found"
+    result = mylog.find(date=T, deltadays=1)
+    assert len(result) == 1, f"FIND3: Expected 1 record, found {len(result)}"
+    assert "CRITICAL" in result[0], f"FIND4: CRITICAL message not found"
 
-    lg.logger.error(f"{msg}: Yet another last line")
-    Res = lg.find(text="error")
-    assert "ERROR" in Res[0], f"FIND5: ERROR message not found"
-    Res = lg.find(text="error", ignorecase=False)
-    assert not Res
-    Res = lg.find(level="error")
-    assert len(Res) == 2, f"FIND6: Expected 2 records, found {len(Res)}"
+    mylog.logger.error(f"{msg}: Yet another last line")
+    result = mylog.find(text="error")
+    assert "ERROR" in result[0], f"FIND5: ERROR message not found"
+    result = mylog.find(text="error", ignorecase=False)
+    assert not result
+    result = mylog.find(level="error")
+    assert len(result) == 2, f"FIND6: Expected 2 records, found {len(result)}"
 
     # Text searches
-    lg.logger.warning("This line won't be in search")
-    Res = lg.find('should')
-    assert len(Res) > 0, f"FIND7: 'Should' not found"
-    for ln in Res:
+    mylog.logger.warning("This line won't be in search")
+    result = mylog.find('should')
+    assert len(result) > 0, f"FIND7: 'Should' not found"
+    for ln in result:
         assert "won't" not in ln, f'FIND8: Found "Won\'t" in "{ln}"'
-    Res = lg.find("should", ignorecase=False)
-    assert not Res, f"FIND9: Found 'Should' with case sensitive search"
-    Res = lg.find(text='new')
-    assert len(Res) == 1, f"FIND10: Expected 1 record, found {len(Res)}"
+    result = mylog.find("should", ignorecase=False)
+    assert not result, f"FIND9: Found 'Should' with case sensitive search"
+    result = mylog.find(text='new')
+    assert len(result) == 1, f"FIND10: Expected 1 record, found {len(result)}"
 
     # Search -5 to -8 days ago
     T -= timedelta(days=3)
-    Res = lg.find(date=T, deltadays=-3)
-    assert len(Res) == 6, f"FIND11: Olddates - Expected 6 records, got {len(Res)}"
-    assert not Res[-1], f"FIND12: olddates - found last record was '{Res[-1]}''"
-    Res2 = lg.find(date=T, deltadays=-3, autoparse=True)
-    assert Res == Res2, f"FIND13: Autoparse - Gives different result"
+    result = mylog.find(date=T, deltadays=-3)
+    assert len(result) == 6, f"FIND11: Olddates - Expected 6 records, got {len(result)}"
+    assert not result[-1], f"FIND12: olddates - found last record was '{result[-1]}''"
+    Res2 = mylog.find(date=T, deltadays=-3, autoparse=True)
+    assert result == Res2, f"FIND13: Autoparse - Gives different result"
 
     lg1 = Log('anotherlog')
-    Res = lg1.find(path=_fn, date=T, deltadays=-3)
-    assert len(Res) == 6, f"FIND14: Anotherlog - Expected 6 lines found {len(Res)}"
-    assert not Res[-1], f"FIND15: Anotherlog - found last line was '{Res[-1]}'"
+    result = lg1.find(path=_fn, date=T, deltadays=-3)
+    assert len(result) == 6, f"FIND14: Anotherlog - Expected 6 lines found {len(result)}"
+    assert not result[-1], f"FIND15: Anotherlog - found last line was '{result[-1]}'"
 
     # Tidy up if OK
     os.remove(_fn)
@@ -168,14 +160,14 @@ def test_find() -> bool:
 def cleanup():
     """ Delete global `mylog` and its log file; delete Handler """
     print("Deleting: mylog.log")
-    if Log.index.get('mylog'):
-        del Log.index['mylog']
     if "mylog" in globals():
         global mylog
         for handler in mylog.logger.handlers:
             mylog.logger.removeHandler(handler)
             handler.close()
         del mylog
+    if Log.index.get('mylog'):
+        del Log.index['mylog']
     path = Path("mylog.log")
     logging.shutdown()
     if path.is_file():
@@ -222,4 +214,21 @@ def test_find_levels():
     assert mylog.find(level="ERRor") == []
     assert len(mylog.find(level="info")) == 1
     assert len(mylog.find(level="InFo")) == 1
+
+def test_find_without_loglevel():
+    """ fmt may not include loglevel e.g. ERROR.  Does find still work?"""
+    ...
+
+"""
+PF Changes:
+
+.find raises errors rather than returning error messages in a list
+"logname" renamed to "path"
+Test added to check .find keeps individual message strings intact e.g. doesn't strip out \t or \n
+Classmethod Log.find(path="another log file.log") instead of mylog.find(path="another log file.log") which doesn't make sense because mylog is tied to a specific path
+Variables given longer more descriptive names generally
+Replaced os.join etc. with pathlib.Path methods
+
+
+"""
 

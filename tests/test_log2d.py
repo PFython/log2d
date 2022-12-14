@@ -208,9 +208,8 @@ def test_find_ignorecase():
 
 def test_find_path():
     create_dummy_log()
-    result = mylog.find(path="mylog.log", date=timestamp, deltadays=-3)
+    result = Log.find(path="mylog.log", date=timestamp, deltadays=-3)
     assert len(result) == 6, f"FIND14: Anotherlog - Expected 6 lines found {len(result)}"
-
 
 @create_mylog
 def test_find_multiline():

@@ -1,6 +1,9 @@
 *.log
 
-/__pycache__/*
-/dist/*
-/.pytest_cache/*
-/log2d.egg-info/*
+__pycache__/*
+dist/*
+.pytest_cache/*
+log2d.egg-info/*
+
+*.py
+

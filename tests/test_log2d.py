@@ -216,19 +216,23 @@ def test_find_levels():
     assert len(mylog.find(level="InFo")) == 1
 
 def test_find_without_loglevel():
-    """ fmt may not include loglevel e.g. ERROR.  Does find still work?"""
-    ...
+    """ fmt may not include loglevel e.g. ERROR.  Test that .find still works"""
+    fmt = Log.presets['name_and_time']
+    mylog = Log("mylog", to_file=True, mode="w", to_stdout=True, fmt=fmt)
+    mylog("This format has no log level")
+    assert len(mylog.find()) == 1
+
 
 """
 PF Changes:
 
-.find raises errors rather than returning error messages in a list
-"logname" renamed to "path"
+.find now raises errors rather than returning error messages in a list
+"logname" argument renamed to "path" (shorter, and consistent with Pathlib)
 Test added to check .find keeps individual message strings intact e.g. doesn't strip out \t or \n
-Classmethod Log.find(path="another log file.log") instead of mylog.find(path="another log file.log") which doesn't make sense because mylog is tied to a specific path
-Variables given longer more descriptive names generally
+Test added to change `mylog.find(path="another log file.log")` to Classmethod i.e. `Log.find(path="another log file.log")` - that way you don't have to create an instance (mylog) to use it, and also it doesn't make sense to bind a different log file to mylog.
+Variables given longer more descriptive PEP8/snake-case names
 Replaced os.join etc. with pathlib.Path methods
-
-
+Added create() and cleanup() utilities to test_log2d for testing
+Added @create_mylog decorator function to test_log2d
 """
 

@@ -1,9 +1,0 @@
-multiple lines ("\n") shouldn't be split i.e. retain other information
-
-test case of error etc
-
-multiple lines shouldn't strip \t etc
-
-Log.find(path=) rather than mylog.find(logfile=)
-
-Finish readme

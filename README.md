@@ -164,7 +164,7 @@ Log.testlog.info("Test info message")
 Log.testlog.info("Three line message\n\twith more data on this line\n\t\tand also on this line too!")
 Log.testlog.info("Test info message")
 
-mylog.find()  # OR: mylog.find(path="/path/to/logfile")
+mylog.find()
 # Returns all entries in the named logfile in the last 7 days (default)
 
 Output:
@@ -175,18 +175,31 @@ Output:
  'with more data on this line',
  'and also on this line too!',
  'testlog|INFO    |2022-12-10T10:07:08+0000|Test info message']
+```
 
+You can specify a minimum logging level as follows:
+
+```
 mylog.find(level="error")
 
 Output:
 ['testlog|ERROR   |2022-12-10T10:07:07+0000|Test error message']
-# Returns a list of all ERROR and above messages in last 7 days
+```
 
+And you can search for particular text and set case sensisitive like this:
+
+```
 results = mylog.find(text="data", ignorecase=True, deltadays=-31)
-# Case insensitive search for all messages containing 'except' within the last month
+# Case insensitive search for all messages containing 'data' within the 31 days
 ```
 
+If you want to search a log file by path e.g. one not created by `log2d` you can use the Class method:
+
 ```
+results = Log.find(path="some_other_log.log")
+```
+
+
 ### **Create a new log file for each session overwriting the previous file each time:**
 
 ```

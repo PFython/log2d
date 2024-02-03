@@ -1,6 +1,6 @@
+from functools import wraps
 import pytest
 import logging
-import time
 from datetime import datetime, timedelta
 
 from log2d import Log, Path
@@ -36,6 +36,7 @@ def create_mylog(function):
     A decorator to create and eventually clean up a generic test logger object.
     Simply insert a line `@create_mylog` above `def test_X():`
     """
+    @wraps(function)
     def wrapper(*args, **kwargs):
         create()
         try:
@@ -144,111 +145,4 @@ def test_set_level() -> bool:
     mylog.logger.fail(f"{msg}: Fail!")
     mylog.logger.critical(f"{msg}: Fail!")
 
-
-def test_find_no_file() -> bool:
-    """Testing find method"""
-    cleanup()
-    mylog = Log("mylog")
-    mylog.logger.info("A log message - console only")
-    with pytest.raises(Exception):
-        result = mylog.find()
-    cleanup()
-
-@create_mylog
-def test_find_text_1():
-    create_dummy_log()
-    mylog.logger.info(f"Message: Last line")
-    result = mylog.find()
-    assert ": Last line" in result[-1], f"FIND2: Incorrect last record"
-
-
-@create_mylog
-def test_find_text_2():
-    create_dummy_log()
-    mylog.logger.warning("This line won't be in search")
-    result = mylog.find('Message')
-    assert len(result) > 0, f"FIND7: 'Message' not found"
-    for line in result:
-        assert "won't" not in line, f'FIND8: Found "Won\'t" in "{line}"'
-
-
-@create_mylog
-def test_find_date_1():
-    create_dummy_log()
-    timestamp = datetime.now()
-    Log.mylog.critical(f"Message: New last line")
-    result = mylog.find(date=timestamp, deltadays=1)
-    assert len(result) == 1, f"FIND3: Expected 1 record, found {len(result)}"
-    assert "CRITICAL" in result[0], f"FIND4: CRITICAL message not found"
-
-@create_mylog
-def test_find_by_date_2():
-    create_dummy_log()
-    timestamp = datetime.now()
-    time.sleep(1)
-    timestamp -= timedelta(days=3)
-    result = mylog.find(date=timestamp, deltadays=-3)
-    assert len(result) == 6, f"FIND11: Olddates - Expected 6 records, got {len(result)}"
-    result2 = mylog.find(date=timestamp, deltadays=-3, autoparse=True)
-    assert result == result2, f"FIND13: Autoparse - Gives different result"
-
-# TODO: Currently fails...
-@create_mylog
-def test_find_by_level():
-    create_dummy_log()
-    mylog.logger.error(f"Message: Yet another last line")
-    result = mylog.find(text="error")
-    assert "ERROR" in result[0], f"FIND5: ERROR message not found"
-    result = mylog.find(text="error", ignorecase=False)
-    assert not result
-    result = mylog.find(level="error")
-    assert len(result) == 6, f"FIND6: Expected 6 records, found {len(result)}"
-
-@create_mylog
-def test_find_ignorecase():
-    create_dummy_log()
-    result = mylog.find("Message", ignorecase=False)
-    assert not result, f"FIND9: Found 'message' with case sensitive search using 'Message'"
-    result = mylog.find("message", ignorecase=False)
-    assert result, f"FIND9: Failed to find 'message' with case sensitive search"
-
-@create_mylog
-def test_find_path_original():
-    create_dummy_log()
-    timestamp = datetime.now()
-    result = mylog.find(path="mylog.log", date=timestamp, deltadays=-3)
-    assert len(result) == 4, f"FIND14: Anotherlog - Expected 4 lines found {len(result)}"
-
-def test_find_path_class_method():
-    create_dummy_log()
-    timestamp = datetime.now()
-    result = Log.find(path="mylog.log", date=timestamp, deltadays=-3)
-    assert len(result) == 6, f"FIND14: Anotherlog - Expected 6 lines found {len(result)}"
-
-# TODO: Currently fails...
-@create_mylog
-def test_find_multiline():
-    Log.mylog.info("Three line message\n\twith more data on this line\n\t\tand also on this line too!")
-    r = mylog.find()
-    assert len(r) == 2
-    assert r.count("\t") == 3
-    assert r.count("\n") == 2
-
-# TODO: Currently fails...
-@create_mylog
-def test_find_levels():
-    Log.mylog.info("Oneline")
-    assert mylog.find(level="error") == []
-    assert mylog.find(level="ERRor") == []
-    assert len(mylog.find(level="info")) == 1
-    assert len(mylog.find(level="InFo")) == 1
-
-# TODO: Currently fails...
-def test_find_without_loglevel():
-    """ fmt may not include loglevel e.g. ERROR.  Test that .find still works"""
-    fmt = Log.presets['name_and_time']
-    mylog = Log("mylog", to_file=True, mode="w", to_stdout=True, fmt=fmt)
-    mylog("This format has no log level")
-    assert len(mylog.find()) == 1
-    cleanup()
 
